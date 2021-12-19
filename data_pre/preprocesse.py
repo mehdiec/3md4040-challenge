@@ -4,9 +4,13 @@ import torchvision.transforms as transforms
 from torchvision.transforms import RandomAffine
 
 import numpy as np
-
+import cv2
 import os.path
 import copy
+
+from const import TRAIN_CONST
+
+DIM = 100, 100
 
 
 def compute_mean_std(loader):
@@ -70,7 +74,29 @@ class CenterReduce:
         return (x - self.mean) / self.std
 
 
-def load_fashion_mnist(
+def transform_images_from_folder(train_dir):
+    images = []
+    for folder in train_dir:
+
+        classe = int(folder[:3])
+        real_folder = "data/train/" + folder
+        for filename in os.listdir(real_folder):
+            img = cv2.imread(os.path.join(real_folder, filename))
+            if img is not None:
+
+                gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+                # Normalize, rescale entries to lie in [0,1]
+                gray_img = gray_img.astype("float32") / 255
+                resized = cv2.resize(gray_img, DIM, interpolation=cv2.INTER_AREA)
+                images.append((resized, classe))
+    return images
+
+
+# save this stuff somewhere
+# split in validation and training test set
+
+
+def load_coakroaches(
     valid_ratio,
     batch_size,
     num_workers,
