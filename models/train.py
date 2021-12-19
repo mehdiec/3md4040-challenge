@@ -14,8 +14,8 @@ from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 
 import utils
-import models
-import data
+import models.model
+from data_pre.preprocesse import load_fashion_mnist
 
 if __name__ == "__main__":
 
@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--model",
-        choices=["linear", "fc", "fcreg", "vanilla", "fancyCNN"],
+        choices=["vanilla", "fancyCNN"],
         action="store",
         required=True,
     )
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     img_width = 28
     img_height = 28
     img_size = (1, img_height, img_width)
-    num_classes = 10
+    num_classes = 86
     batch_size = 128
     epochs = 10
     valid_ratio = 0.2
@@ -102,7 +102,7 @@ if __name__ == "__main__":
         valid_loader,
         test_loader,
         normalization_function,
-    ) = data.load_fashion_mnist(
+    ) = load_fashion_mnist(
         valid_ratio,
         batch_size,
         args.num_workers,
