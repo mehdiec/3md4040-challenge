@@ -7,8 +7,7 @@ import torch
 import torchvision
 import torchvision.transforms as transforms
 
-import data
-import models.model
+
 from utils import torch_summarize, test
 
 parser = argparse.ArgumentParser(

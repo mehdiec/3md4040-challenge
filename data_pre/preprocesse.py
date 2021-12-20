@@ -7,8 +7,10 @@ import numpy as np
 import cv2
 import os.path
 import copy
-
+from PIL import Image
+from matplotlib import cm
 from const import TRAIN_CONST
+from plankton import PlanktonsDataset
 
 DIM = 100, 100
 
@@ -107,11 +109,13 @@ def load_coakroaches(
 ):
 
     if not dataset_dir:
-        dataset_dir = os.path.join(os.path.expanduser("~"), "Datasets", "FashionMNIST")
+        dataset_dir = os.path.join(
+            os.path.expanduser("~"), "train", "train_csv", "train.csv"
+        )
 
     # Load the dataset for the training/validation sets
-    train_valid_dataset = torchvision.datasets.FashionMNIST(
-        root=dataset_dir, train=True, download=True
+    train_valid_dataset = PlanktonsDataset(
+        csv_file="data/train/train_csv/train.csv", root_dir="data/train/"
     )
 
     # Split it into training and validation sets
@@ -123,13 +127,13 @@ def load_coakroaches(
     )
 
     # Load the test set
-    test_dataset = torchvision.datasets.FashionMNIST(root=dataset_dir, train=False)
+    # test_dataset = torchvision.datasets.FashionMNIST(root=dataset_dir, train=False)
 
     # Do we want to normalize the dataset given the statistics of the training set ?
     data_transforms = {
         "train": transforms.ToTensor(),
         "valid": transforms.ToTensor(),
-        "test": transforms.ToTensor(),
+        # "test": transforms.ToTensor(),
     }
 
     if train_augment_transforms:
@@ -159,7 +163,7 @@ def load_coakroaches(
 
     train_dataset = DatasetTransformer(train_dataset, data_transforms["train"])
     valid_dataset = DatasetTransformer(valid_dataset, data_transforms["valid"])
-    test_dataset = DatasetTransformer(test_dataset, data_transforms["test"])
+    # test_dataset = DatasetTransformer(test_dataset, data_transforms["test"])
 
     # shuffle = True : reshuffles the data at every epoch
     train_loader = torch.utils.data.DataLoader(
@@ -176,14 +180,14 @@ def load_coakroaches(
         num_workers=num_workers,
     )
 
-    test_loader = torch.utils.data.DataLoader(
-        dataset=test_dataset,
-        batch_size=batch_size,
-        shuffle=False,
-        num_workers=num_workers,
-    )
+    # test_loader = torch.utils.data.DataLoader(
+    #    dataset=test_dataset,
+    #    batch_size=batch_size,
+    #    shuffle=False,
+    #    num_workers=num_workers,
+    # )
 
-    return train_loader, valid_loader, test_loader, copy.copy(normalization_function)
+    return train_loader, valid_loader, "", copy.copy(normalization_function)
 
 
 def display_tensor_samples(tensor_samples, labels=None, filename=None):
@@ -231,20 +235,9 @@ if __name__ == "__main__":
     num_threads = 4
     valid_ratio = 0.2
     batch_size = 128
-    classes_names = [
-        "T-shirt/top",
-        "Trouser",
-        "Pullover",
-        "Dress",
-        "Coat",
-        "Sandal",
-        "Shirt",
-        "Sneaker",
-        "Bag",
-        "Ankle boot",
-    ]
+    classes_names = TRAIN_CONST
 
-    train_loader, valid_loader, test_loader = load_fashion_mnist(
+    train_loader, valid_loader, test_loader, _ = load_coakroaches(
         valid_ratio, batch_size, num_threads, False
     )
 
@@ -258,21 +251,19 @@ if __name__ == "__main__":
             len(valid_loader.dataset), len(valid_loader)
         )
     )
-    print(
-        "The test set contains {} images, in {} batches".format(
-            len(test_loader.dataset), len(test_loader)
-        )
-    )
+    # print(
+    #    "The test set contains {} images, in {} batches".format(
+    #        len(test_loader.dataset), len(test_loader)
+    #    )
+    # )
 
     # display_samples(train_loader, 10, 'fashionMNIST_samples.png')
 
     ###################################################################################
     ## Data augmentation
 
-    train_valid_dataset = torchvision.datasets.FashionMNIST(
-        root=os.path.join(os.path.expanduser("~"), "Datasets", "FashionMNIST"),
-        train=True,
-        download=True,
+    train_valid_dataset = PlanktonsDataset(
+        csv_file="data/train/train_csv/train.csv", root_dir="data/train/"
     )
 
     train_augment = transforms.Compose(
@@ -283,16 +274,17 @@ if __name__ == "__main__":
     )
 
     # data augment a single sample several times
-    img, label = train_valid_dataset[np.random.randint(len(train_valid_dataset))]
-    Timg = transforms.functional.to_tensor(img)
-    n_augmented_samples = 10
-    aug_imgs = torch.zeros(
-        n_augmented_samples, Timg.shape[0], Timg.shape[1], Timg.shape[2]
-    )
-    for i in range(n_augmented_samples):
-        aug_imgs[i] = transforms.ToTensor()(train_augment(img))
-    print("I augmented a {}".format(classes_names[label]))
-    display_tensor_samples(aug_imgs, filename="fashionMNIST_sample_augment.png")
+    # img, label = train_valid_dataset[np.random.randint(len(train_valid_dataset))]
+    # Timg = transforms.functional.to_tensor(img)
+    # n_augmented_samples = 10
+    # aug_imgs = torch.zeros(
+    #    n_augmented_samples, Timg.shape[0], Timg.shape[1], Timg.shape[2]
+    # )
+    # for i in range(n_augmented_samples):
+    #    img = Image.fromarray(np.uint8(cm.gist_earth(img) * 255))
+    #    aug_imgs[i] = transforms.ToTensor()(train_augment(img))
+    # print("I augmented a {}".format(classes_names[label]))
+    # display_tensor_samples(aug_imgs, filename="fashionMNIST_sample_augment.png")
 
     # Test with data augmentation
     train_augment = transforms.Compose(
@@ -302,16 +294,16 @@ if __name__ == "__main__":
         ]
     )
 
-    train_loader, _, _ = load_fashion_mnist(
+    train_loader, _, _, _ = load_coakroaches(
         valid_ratio,
         batch_size,
         num_threads,
         False,
         train_augment_transforms=train_augment,
     )
-    display_samples(train_loader, 10, "fashionMNIST_samples_augment.png")
+    # display_samples(train_loader, 10, "fashionMNIST_samples_augment.png")
 
     # Loading normalized datasets
-    train_loader, valid_loader, test_loader = load_fashion_mnist(
+    train_loader, valid_loader, _, _ = load_coakroaches(
         valid_ratio, batch_size, num_threads, True
     )
