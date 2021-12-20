@@ -1,7 +1,11 @@
+print("Hello from ", __name__)
 import argparse
 import os
 import sys
 
+
+sys.path.append("/home/mehdi/sdi/3md4040-challenge/data_pre")
+print(sys.path)
 import torch
 import torch.nn as nn
 import torchvision
@@ -14,8 +18,9 @@ from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 
 import utils
-import models.model
-from data_pre.preprocesse import load_fashion_mnist
+import ann
+
+from data_pre.preprocesse import load_coakroaches
 
 if __name__ == "__main__":
 
@@ -102,7 +107,7 @@ if __name__ == "__main__":
         valid_loader,
         test_loader,
         normalization_function,
-    ) = load_fashion_mnist(
+    ) = load_coakroaches(
         valid_ratio,
         batch_size,
         args.num_workers,
@@ -112,7 +117,7 @@ if __name__ == "__main__":
     )
 
     # Init model, loss, optimizer
-    model = models.build_model(args.model, img_size, num_classes)
+    model = ann.build_model(args.model, img_size, num_classes)
     model = model.to(device)
 
     loss = nn.CrossEntropyLoss()  # This computes softmax internally
@@ -178,12 +183,12 @@ Optimizer
         val_loss, val_acc = utils.test(model, valid_loader, loss, device)
         print(" Validation : Loss : {:.4f}, Acc : {:.4f}".format(val_loss, val_acc))
 
-        test_loss, test_acc = utils.test(model, test_loader, loss, device)
-        print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
+        # test_loss, test_acc = utils.test(model, test_loader, loss, device)
+        # print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
 
         history_file.write(
             "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-                t, train_loss, train_acc, val_loss, val_acc, test_loss, test_acc
+                t, train_loss, train_acc, val_loss, val_acc  # , test_loss, test_acc
             )
         )
         model_checkpoint.update(val_loss)
@@ -191,8 +196,8 @@ Optimizer
         tensorboard_writer.add_scalar("metrics/train_acc", train_acc, t)
         tensorboard_writer.add_scalar("metrics/val_loss", val_loss, t)
         tensorboard_writer.add_scalar("metrics/val_acc", val_acc, t)
-        tensorboard_writer.add_scalar("metrics/test_loss", test_loss, t)
-        tensorboard_writer.add_scalar("metrics/test_acc", test_acc, t)
+        # tensorboard_writer.add_scalar("metrics/test_loss", test_loss, t)
+        # tensorboard_writer.add_scalar("metrics/test_acc", test_acc, t)
 
 
 # Loading the best model found
@@ -208,5 +213,5 @@ model.eval()
 val_loss, val_acc = utils.test(model, valid_loader, loss, device)
 print(" Validation : Loss : {:.4f}, Acc : {:.4f}".format(val_loss, val_acc))
 
-test_loss, test_acc = utils.test(model, test_loader, loss, device)
-print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
+# test_loss, test_acc = utils.test(model, test_loader, loss, device)
+# print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
