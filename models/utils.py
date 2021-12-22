@@ -9,7 +9,7 @@ import numpy as np
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
 
-def scores(y_pred):
+def scores(y_pred, y_true):
 
     print(f"macro F1 : {f1_score(y_true, y_pred, average='macro')}")
     print(f"accuracy : {accuracy_score(y_true, y_pred)}")
@@ -53,7 +53,7 @@ def train(model, loader, f_loss, optimizer, device):
     for i, (inputs, targets) in enumerate(loader):
 
         inputs, targets = inputs.to(device), targets.to(device)
-
+        inputs = inputs.float()
         # Compute the forward propagation
         outputs = model(inputs)
 
@@ -105,10 +105,10 @@ def test(model, loader, f_loss, device):
         # but is important with layers such as dropout, batchnorm, ..
         model.eval()
         N = 0
-        tot_loss, correct = 0.0, 0
+        tot_loss, correct, f11 = 0.0, 0, 0.0
         for i, (inputs, targets) in enumerate(loader):
-
             inputs, targets = inputs.to(device), targets.to(device)
+            inputs = inputs.float()
 
             outputs = model(inputs)
 
@@ -122,6 +122,16 @@ def test(model, loader, f_loss, device):
             # For the accuracy
             predicted_targets = outputs.argmax(dim=1)
             correct += (predicted_targets == targets).sum().item()
+
+            y_true = targets.cpu().data.numpy()
+            y_pred = predicted_targets.cpu().data.numpy()
+
+            f11 += f1_score(y_true, y_pred, average="macro")
+
+        print(f"macro F1 : {f11/N}")
+        print(f11, N)
+        scores(y_pred, y_true)
+
         return tot_loss / N, correct / N
 
 
