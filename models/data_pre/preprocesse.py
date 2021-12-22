@@ -179,21 +179,6 @@ class DatasetTransformer(torch.utils.data.Dataset):
         return len(self.base_dataset)
 
 
-def load_test_data(batch_size, dataset_dir=None):
-    if not dataset_dir:
-        dataset_dir = os.path.join(os.path.expanduser("~"), "Datasets", "FashionMNIST")
-
-    # Load the test set
-    test_dataset = torchvision.datasets.FashionMNIST(root=dataset_dir, train=False)
-
-    test_dataset = DatasetTransformer(test_dataset, transforms.ToTensor())
-    test_loader = torch.utils.data.DataLoader(
-        dataset=test_dataset, batch_size=batch_size, shuffle=False
-    )
-
-    return test_loader
-
-
 class CenterReduce:
     def __init__(self, mean, std):
         self.mean = mean
@@ -206,6 +191,7 @@ class CenterReduce:
 def transform_images_from_folder(train_dir):
     images = []
     for folder in train_dir:
+        print(folder)
 
         classe = int(folder[:3])
         real_folder = "data/train/" + folder
@@ -249,6 +235,9 @@ def load_coakroaches(
     nb_train, nb_valid = int((1.0 - valid_ratio) * len(train_valid_dataset)), int(
         valid_ratio * len(train_valid_dataset)
     )
+    if nb_train + nb_valid != len(train_valid_dataset):
+        nb_train = nb_train + 1
+
     train_dataset, valid_dataset = torch.utils.data.dataset.random_split(
         train_valid_dataset, [nb_train, nb_valid]
     )
