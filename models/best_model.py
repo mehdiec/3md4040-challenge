@@ -75,7 +75,7 @@ else:
     device = torch.device("cpu")
 
 # Where to store the logs
-logdir = utils.generate_unique_logpath(args.logdir, args.model)
+logdir = "./logs/fancyCNN_0"
 print("Logging to {}".format(logdir))
 if not os.path.exists(args.logdir):
     os.mkdir(args.logdir)
@@ -84,13 +84,7 @@ if not os.path.exists(logdir):
 
 # FashionMNIST dataset
 train_augment_transforms = None
-if args.data_augment:
-    train_augment_transforms = transforms.Compose(
-        [
-            transforms.RandomHorizontalFlip(0.5),
-            RandomAffine(degrees=10, translate=(0.1, 0.1)),
-        ]
-    )
+
 
 (train_loader, valid_loader, test_loader, normalization_function,) = load_coakroaches(
     valid_ratio,
@@ -101,64 +95,8 @@ if args.data_augment:
     train_augment_transforms=train_augment_transforms,
 )
 
-# Init model, loss, optimizer
-model = ann.build_model(args.model, img_size, num_classes)
-model = model.to(device)
 
 loss = nn.CrossEntropyLoss()  # This computes softmax internally
-# optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
-optimizer = torch.optim.Adam(
-    model.parameters(), lr=0.01, weight_decay=args.weight_decay
-)
-
-# Where to save the logs of the metrics
-history_file = open(logdir + "/history", "w", 1)
-history_file.write(
-    "Epoch\tTrain loss\tTrain acc\tVal loss\tVal acc\n"  # \tTest loss\tTest acc\n"
-)
-
-# Generate and dump the summary of the model
-model_summary = utils.torch_summarize(model)
-print("Summary:\n {}".format(model_summary))
-
-summary_file = open(logdir + "/summary.txt", "w")
-summary_text = """
-Executed command
-===============
-{}
-Dataset
-=======
-Train transform : {}
-Normalization : {}
-Model summary
-=============
-{}
-{} trainable parameters
-Optimizer
-========
-{}
-""".format(
-    " ".join(sys.argv),
-    train_augment_transforms,
-    args.normalize,
-    str(model).replace("\n", "\n\t"),
-    sum(p.numel() for p in model.parameters() if p.requires_grad),
-    str(optimizer).replace("\n", "\n\t"),
-)
-summary_file.write(summary_text)
-summary_file.close()
-
-tensorboard_writer = SummaryWriter(log_dir=logdir)
-tensorboard_writer.add_text("Experiment summary", summary_text)
-model_checkpoint = utils.ModelCheckpoint(
-    logdir + "/best_model.pt",
-    {"model": model, "normalization_function": normalization_function},
-)
-# Add the graph of the model to the tensorboard
-inputs, _ = next(iter(train_loader))
-inputs = inputs.to(device)
-inputs = inputs.float()
-tensorboard_writer.add_graph(model, inputs)
 
 
 print("Loading and testing the best model")
