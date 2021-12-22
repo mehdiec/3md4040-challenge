@@ -19,7 +19,7 @@ import numpy as np
 
 import utils
 import ann
-
+from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 from data_pre.preprocesse import load_coakroaches
 
 
@@ -123,7 +123,7 @@ optimizer = torch.optim.Adam(
 # Where to save the logs of the metrics
 history_file = open(logdir + "/history", "w", 1)
 history_file.write(
-    "Epoch\tTrain loss\tTrain acc\tVal loss\tVal acc\tTest loss\tTest acc\n"
+    "Epoch\tTrain loss\tTrain acc\tVal loss\tVal acc\n"  # \tTest loss\tTest acc\n"
 )
 
 # Generate and dump the summary of the model
@@ -166,6 +166,7 @@ model_checkpoint = utils.ModelCheckpoint(
 # Add the graph of the model to the tensorboard
 inputs, _ = next(iter(train_loader))
 inputs = inputs.to(device)
+inputs = inputs.float()
 tensorboard_writer.add_graph(model, inputs)
 ####################################################################################### Main Loop
 for t in range(epochs):
@@ -179,9 +180,7 @@ for t in range(epochs):
     # print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
 
     history_file.write(
-        "{}\t{}\t{}\t{}\t{}\t{}\t{}\n".format(
-            t, train_loss, train_acc, val_loss, val_acc  # , test_loss, test_acc
-        )
+        "{}\t{}\t{}\t{}\t{}\n".format(t, train_loss, train_acc, val_loss, val_acc)
     )
     model_checkpoint.update(val_loss)
     tensorboard_writer.add_scalar("metrics/train_loss", train_loss, t)
@@ -203,6 +202,7 @@ model = loaded_dict["model"].to(device)
 model.eval()
 
 val_loss, val_acc = utils.test(model, valid_loader, loss, device)
+
 print(" Validation : Loss : {:.4f}, Acc : {:.4f}".format(val_loss, val_acc))
 
 # test_loss, test_acc = utils.test(model, test_loader, loss, device)
