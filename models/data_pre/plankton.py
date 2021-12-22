@@ -2,11 +2,14 @@ from __future__ import print_function, division
 import os
 import torch
 import pandas as pd
-from skimage import io, transform
+
 import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
+from PIL import Image
+from matplotlib import cm
+
 
 # Ignore warnings
 import warnings
@@ -44,8 +47,8 @@ class PlanktonsDataset(Dataset):
         landmarks = self.data.iloc[idx, 2:]
         landmarks = np.array([landmarks])
         landmarks = landmarks.astype("float").reshape(-1, 28)
-
-        img, target = landmarks, int(self.targets[idx])
+        img = Image.fromarray(np.uint8(landmarks), "L")
+        target = int(self.targets[idx])
 
         if self.transform:
             img = self.transform(img)
