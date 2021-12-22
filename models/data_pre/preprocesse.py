@@ -1,5 +1,4 @@
 import torch
-import torchvision
 import torchvision.transforms as transforms
 from torchvision.transforms import RandomAffine
 
@@ -7,8 +6,6 @@ import numpy as np
 import cv2
 import os.path
 import copy
-from PIL import Image
-from matplotlib import cm
 
 # from plankton import PlanktonsDataset
 from torch.utils.data import Dataset

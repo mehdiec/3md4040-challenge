@@ -1,21 +1,13 @@
-print("Hello from ", __name__)
 import argparse
 import os
 import sys
 
-
-sys.path.append("/home/mehdi/sdi/3md4040-challenge/data_pre")
-print(sys.path)
 import torch
 import torch.nn as nn
-import torchvision
 import torchvision.transforms as transforms
-from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.transforms import RandomAffine
-
 from torch.utils.tensorboard import SummaryWriter
 
-import numpy as np
 
 import utils
 import ann

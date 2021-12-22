@@ -1,15 +1,12 @@
+import json
 import numpy as np
 import torch
-from torch.utils.data import Dataset
 from torch.nn.modules.module import _addindent
-from torch.utils.data.sampler import SubsetRandomSampler
-
-import sklearn
-import numpy as np
 from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
 
 
 def scores(y_pred, y_true):
+    scores = []
 
     print(f"macro F1 : {f1_score(y_true, y_pred, average='macro')}")
     print(f"accuracy : {accuracy_score(y_true, y_pred)}")
@@ -18,17 +15,23 @@ def scores(y_pred, y_true):
     for cls in np.unique(np_y_true):
         biclass_true = (np_y_true == cls).astype(int)
         biclass_pred = (np_y_pred == cls).astype(int)
-        print(f"Class {cls}")
         tp = (biclass_true * biclass_pred).sum()
         fp = ((1 - biclass_true) * biclass_pred).sum()
         fn = (biclass_true * (1 - biclass_pred)).sum()
         tn = ((1 - biclass_true) * (1 - biclass_pred)).sum()
-        print(f"TP: {tp} ; FN : {fn} ; FP : {fp}; TN : {tn}")
-        print(f"precision : {precision_score(biclass_true, biclass_pred)}")
-        print(f"recall : {recall_score(biclass_true, biclass_pred)}")
-        print(f"local F1 : {f1_score(biclass_true, biclass_pred)}")
+        dict_class = {
+            "Class": cls,
+            "TP": tp,
+            "FN": fn,
+            "FP": fp,
+            "TN": tn,
+            "precision": precision_score(biclass_true, biclass_pred),
+            "recall": recall_score(biclass_true, biclass_pred),
+            "local_F1": f1_score(biclass_true, biclass_pred),
+        }
+        scores.append(dict_class)
 
-    print("\n\n")
+    return scores
 
 
 def train(model, loader, f_loss, optimizer, device):
@@ -127,6 +130,10 @@ def test(model, loader, f_loss, device):
             y_pred = predicted_targets.cpu().data.numpy()
 
             f11 += f1_score(y_true, y_pred, average="macro")
+            data = scores(y_true, y_pred)
+
+            with open("app.json", "w") as f:
+                json.dump(data, f)
 
         print(f"macro F1 : {f11/N}")
         print(f11, N)

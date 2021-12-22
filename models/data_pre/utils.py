@@ -1,7 +1,7 @@
-from PIL import Image
-import numpy as np
 import os
 import csv
+from PIL import Image
+import numpy as np
 
 
 DIM = 28, 28
