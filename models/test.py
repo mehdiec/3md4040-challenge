@@ -3,7 +3,7 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 import time
-from models.data_pre.preprocesse import PlanktonsDataset
+from data_pre.preprocesse import PlanktonsDataset
 import torch
 import torchvision
 import torchvision.transforms as transforms
