@@ -57,7 +57,6 @@ args = parser.parse_args()
 img_size = (1, 28, 28)
 num_classes = 10
 batch_size = 128
-dataset_dir = args.dataset_dir
 use_gpu = args.use_gpu
 if use_gpu:
     device = torch.device("cuda")
