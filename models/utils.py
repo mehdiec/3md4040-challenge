@@ -156,6 +156,10 @@ def test_csv(model, loader, device, dir):
     """
     # We disable gradient computation which speeds up the computation
     # and reduces the memory usage
+    COL = "imgname", "label"
+    with open(dir + "results.csv", "a") as f:
+        writer = csv.writer(f)
+        writer.writerow(COL)
     with torch.no_grad():
         # We enter evaluation mode. This is useless for the linear model
         # but is important with layers such as dropout, batchnorm, ..
