@@ -21,14 +21,14 @@ def scores(y_pred, y_true):
         fn = (biclass_true * (1 - biclass_pred)).sum()
         tn = ((1 - biclass_true) * (1 - biclass_pred)).sum()
         dict_class = {
-            "Class": cls,
-            "TP": tp,
-            "FN": fn,
-            "FP": fp,
-            "TN": tn,
-            "precision": precision_score(biclass_true, biclass_pred),
-            "recall": recall_score(biclass_true, biclass_pred),
-            "local_F1": f1_score(biclass_true, biclass_pred),
+            "Class": int(cls),
+            "TP": int(tp),
+            "FN": int(fn),
+            "FP": int(fp),
+            "TN": int(tn),
+            "precision": int(precision_score(biclass_true, biclass_pred)),
+            "recall": int(recall_score(biclass_true, biclass_pred)),
+            "local_F1": int(f1_score(biclass_true, biclass_pred)),
         }
         scores.append(dict_class)
 
