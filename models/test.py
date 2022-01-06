@@ -3,12 +3,13 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 import time
+from models.data_pre.preprocesse import PlanktonsDataset
 import torch
 import torchvision
 import torchvision.transforms as transforms
 
 
-from utils import torch_summarize, test
+from utils import test_csv, torch_summarize, test
 
 parser = argparse.ArgumentParser(
     description="""
@@ -42,6 +43,14 @@ parser.add_argument(
     required=True,
 )
 
+parser.add_argument(
+    "--dir",
+    type=str,
+    help="Which directory will the result be dumped",
+    required=True,
+)
+
+
 args = parser.parse_args()
 
 
@@ -58,8 +67,8 @@ else:
 ##################################################### Data loading
 test_transforms = transforms.ToTensor()
 
-test_dataset = torchvision.datasets.FashionMNIST(
-    root=dataset_dir, train=False, transform=test_transforms
+test_dataset = PlanktonsDataset(
+    csv_file="data/test/test_csv/test.csv", root_dir="data/test/"
 )
 
 test_loader = torch.utils.data.DataLoader(
@@ -102,8 +111,4 @@ model.eval()
 
 criterion = torch.nn.CrossEntropyLoss()
 
-t0 = time.time()
-test_loss, test_acc = test(model, test_loader, criterion, device)
-t1 = time.time()
-print("Evaluation in {} s.".format(t1 - t0))
-print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
+test_csv(model, test_loader, device, dir=args.dir)
