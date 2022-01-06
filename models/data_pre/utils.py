@@ -53,7 +53,7 @@ def transform_images_from_test(new_file="data/test/test_csv/test.csv"):
         writer.writerow(COL)
 
     classe = 420
-    real_folder = "data/test/"
+    real_folder = "data/test/imgs/"
     for filename in os.listdir(real_folder):
         img_file = Image.open(os.path.join(real_folder, filename))
         if img_file is not None:
