@@ -1,3 +1,4 @@
+import csv
 import json
 import numpy as np
 import torch
@@ -142,6 +143,46 @@ def test(model, loader, f_loss, device):
         return tot_loss / N, correct / N
 
 
+def test_csv(model, loader, device, dir):
+    """
+    Test a model by iterating over the loader
+    Arguments :
+        model     -- A torch.nn.Module object
+        loader    -- A torch.utils.data.DataLoader
+        f_loss    -- The loss function, i.e. a loss Module
+        device    -- a torch.device object
+    Returns :
+        A tuple with the mean loss and mean accuracy
+    """
+    # We disable gradient computation which speeds up the computation
+    # and reduces the memory usage
+    with torch.no_grad():
+        # We enter evaluation mode. This is useless for the linear model
+        # but is important with layers such as dropout, batchnorm, ..
+        model.eval()
+        N = 0
+        tot_loss, correct, f11 = 0.0, 0, 0.0
+        for _, (inputs, _) in enumerate(loader):
+            inputs = inputs.to(device)
+            inputs = inputs.float()
+
+            outputs = model(inputs)
+            input_cpu = inputs.cpu().data.numpy()
+            names = [inp.name for inp in input_cpu]
+
+            # For the accuracy
+            predicted_targets = outputs.argmax(dim=1)
+
+            y_pred = predicted_targets.cpu().data.numpy()
+            l = [names, y_pred]
+
+            data = zip(*l)
+
+            with open(dir + "results.csv", "a") as f:
+                writer = csv.writer(f)
+                writer.writerows(data)
+
+
 # from https://github.com/kuangliu/pytorch-cifar/blob/master/utils.py
 
 import os
@@ -283,18 +324,22 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
     tmpstr += "\n {} learnable parameters".format(total_params)
     return tmpstr
 
+
 # SquarePadding : https://discuss.pytorch.org/t/how-to-resize-and-pad-in-a-torchvision-transforms-compose/71850/10
+
 
 class SquarePad:
     def __call__(self, image):
-        max_wh = None # Max longueur largeur des images du dataset à determiner
+        max_wh = None  # Max longueur largeur des images du dataset à determiner
         p_left, p_top = [(max_wh - s) // 2 for s in image.size]
-        p_right, p_bottom = [max_wh - (s+pad) for s, pad in zip(image.size, [p_left, p_top])]
+        p_right, p_bottom = [
+            max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
+        ]
         padding = (p_left, p_top, p_right, p_bottom)
-        return F.pad(image, padding, 0, 'constant') # valeur 0 pour la couleur noir
+        return F.pad(image, padding, 0, "constant")  # valeur 0 pour la couleur noir
 
 
-'''
+"""
 Use example :
 
 target_image_size = (224, 224)  # as an example
@@ -305,4 +350,4 @@ transform=transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
 ])
-'''
+"""
