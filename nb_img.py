@@ -1,6 +1,7 @@
 
 import os
 import os.path
+import argparse
  ############################################################################################ Datasets
 TRAIN_CONST = [
     "000_Candaciidae",
@@ -90,8 +91,19 @@ TRAIN_CONST = [
     "042_Annelida",
     "085_Limacidae",
 ]
-infos={}
-for elt in TRAIN_CONST : 
-    images_dir = dataset_dir = os.path.join(os.path.expanduser("~"),'Bureau','train',elt)
-    infos[elt] = len(os.listdir(images_dir))
+# parser = argparse.ArgumentParser()
+
+# parser.add_argument(
+#     "--training_directory",
+#     type=str,
+#     help="The directory in which the training set is",
+# )
+# args = parser.parse_args()
+# dir_train = args.training_directory
+
+def nb_img(dir_train,classes_list=TRAIN_CONST):
+    infos={}
+    for elt in classes_list : 
+        images_dir = os.path.join(dir_train,elt)
+        infos[elt] = len(os.listdir(images_dir))
 
