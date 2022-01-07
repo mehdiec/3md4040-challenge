@@ -2,6 +2,8 @@
 import os
 import os.path
 from PIL import Image
+import argparse
+
  ############################################################################################ Datasets
 TRAIN_CONST = [
     "000_Candaciidae",
@@ -92,11 +94,26 @@ TRAIN_CONST = [
     "085_Limacidae",
 ]
 
+# parser = argparse.ArgumentParser()
+
+# parser.add_argument(
+#     "--training_directory",
+#     type=str,
+#     help="The directory in which the training set is",
+# )
+# args = parser.parse_args()
+
+# dir_train = args.training_directory
+def img_size(dir_train,classes_list=TRAIN_CONST):
+    infos={}
+
+    for elt in classes_list : 
+        infos[elt]={}
+        dir_class = os.path.join(dir_train,elt)
+        for image in os.listdir(dir_class):
+            im = Image.open(image)
+            width,height = im.size
+            infos[elt][image]=(width,height)
 
 
-#for elt in TRAIN_CONST : 
-for image in os.listdir(dir_test):
-    file_test = dataset_dir = os.path.join(os.path.expanduser("~"),'Bureau','train','000_Candaciidae',image)
-    im = Image.open(file_test)
-    width,height = im.size
-    print(width,height)
+        
