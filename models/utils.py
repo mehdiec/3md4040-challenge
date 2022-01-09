@@ -9,8 +9,6 @@ from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_sc
 def scores(y_pred, y_true):
     scores = []
 
-    print(f"macro F1 : {f1_score(y_true, y_pred, average='macro')}")
-    print(f"accuracy : {accuracy_score(y_true, y_pred)}")
     np_y_true = np.array(y_true)
     np_y_pred = np.array(y_pred)
     for cls in np.unique(np_y_true):
@@ -136,7 +134,7 @@ def test(model, loader, f_loss, device):
                 i,
                 len(loader),
                 msg="Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(
-                    tot_loss / N, correct / N, f11 / N
+                    tot_loss / N, correct / N, f1_score(y_true, y_pred, average="macro")
                 ),
             )
 
@@ -342,7 +340,7 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
 
 class SquarePad:
     def __call__(self, image):
-        max_wh = None  # Max longueur largeur des images du dataset �� determiner
+        max_wh = None  # Max longueur largeur des images du dataset ������ determiner
         p_left, p_top = [(max_wh - s) // 2 for s in image.size]
         p_right, p_bottom = [
             max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
