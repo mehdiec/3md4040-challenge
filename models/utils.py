@@ -132,16 +132,19 @@ def test(model, loader, f_loss, device):
 
             f11 += f1_score(y_true, y_pred, average="macro")
             data = scores(y_true, y_pred)
+            progress_bar(
+                i,
+                len(loader),
+                msg="Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(
+                    tot_loss / N, correct / N, f11 / N
+                ),
+            )
 
             with open("app.json", "w") as f:
 
                 json.dump(data, f)
 
-        print(f"macro F1 : {f11/N}")
-        print(f11, N)
-        scores(y_pred, y_true)
-
-        return tot_loss / N, correct / N
+        return tot_loss / N, correct / N, f11 / N
 
 
 def test_csv(model, loader, device, dir):
@@ -167,7 +170,7 @@ def test_csv(model, loader, device, dir):
         model.eval()
         N = 0
         tot_loss, correct, f11 = 0.0, 0, 0.0
-        for _, (inputs, names) in enumerate(loader):
+        for i, (inputs, names) in enumerate(loader):
             inputs = inputs.to(device)
             inputs = inputs.float()
 
@@ -181,6 +184,11 @@ def test_csv(model, loader, device, dir):
             l = [names, y_pred]
 
             data = zip(*l)
+            progress_bar(
+                i,
+                len(loader),
+                msg="...",
+            )
 
             with open(dir + "results.csv", "a") as f:
                 writer = csv.writer(f)
