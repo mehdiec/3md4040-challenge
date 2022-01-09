@@ -7,7 +7,7 @@ from data_pre.preprocesse import PlanktonsDataset
 import torch
 import torchvision
 import torchvision.transforms as transforms
-
+from data_pre.preprocesse import load_coakroaches
 
 from utils import test_csv, torch_summarize, test
 
@@ -57,6 +57,7 @@ args = parser.parse_args()
 img_size = (1, 28, 28)
 num_classes = 10
 batch_size = 128
+
 use_gpu = args.use_gpu
 if use_gpu:
     device = torch.device("cuda")
@@ -64,17 +65,14 @@ else:
     device = torch.device("cpu")
 
 ##################################################### Data loading
-test_transforms = transforms.ToTensor()
+train_augment_transforms = None
 
-test_dataset = PlanktonsDataset(
-    csv_file="data/test/test_csv/test.csv", root_dir="data/test/"
-)
 
-test_loader = torch.utils.data.DataLoader(
-    dataset=test_dataset,
-    batch_size=batch_size,
-    shuffle=False,
-    num_workers=args.num_workers,
+(train_loader, valid_loader, test_loader, normalization_function,) = load_coakroaches(
+    0.2,
+    batch_size,
+    args.num_workers,
+    train_augment_transforms,
 )
 
 
