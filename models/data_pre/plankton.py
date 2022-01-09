@@ -19,7 +19,7 @@ plt.ion()  # interactive mode
 class PlanktonsDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, csv_file, root_dir, transform=None):
+    def __init__(self, csv_file, root_dir, transform=None, test=False):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -33,6 +33,7 @@ class PlanktonsDataset(Dataset):
         self.transform = transform
         self.name = self.data.iloc[:, 0]
         self.targets = self.data.iloc[:, 1]
+        self.test = test
 
     def __len__(self):
         return len(self.data)
@@ -44,10 +45,15 @@ class PlanktonsDataset(Dataset):
         landmarks = self.data.iloc[idx, 2:]
         landmarks = np.array([landmarks])
         landmarks = landmarks.astype("float").reshape(-1, 28)
-        img = Image.fromarray(np.uint8(landmarks), "L")
-        target = int(self.targets[idx])
 
-        if self.transform:
-            img = self.transform(img)
+        if self.test:
+            img, target = landmarks, 420
+        else:
+            img, target = landmarks, int(self.targets[idx])
+
+        if self.test:
+            target = self.data.iloc[idx, 1]
+        else:
+            target = ""
 
         return img, target

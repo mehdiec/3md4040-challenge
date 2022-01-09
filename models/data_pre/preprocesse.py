@@ -133,14 +133,11 @@ class PlanktonsDataset(Dataset):
         landmarks = landmarks.astype("float").reshape(-1, 28)
 
         if self.test:
-            img, target = landmarks, 420
+            img = landmarks
+            target = self.data.iloc[idx, 1]
+
         else:
             img, target = landmarks, int(self.targets[idx])
-
-        if self.test:
-            target = self.data.iloc[idx, 1]
-        else:
-            target = ""
 
         return img, target
 

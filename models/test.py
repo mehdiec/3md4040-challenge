@@ -1,15 +1,11 @@
 import argparse
 from argparse import RawTextHelpFormatter
-import os
 import sys
-import time
-from data_pre.preprocesse import PlanktonsDataset
 import torch
-import torchvision
 import torchvision.transforms as transforms
 from data_pre.preprocesse import load_coakroaches
 
-from utils import test_csv, torch_summarize, test
+from utils import test_csv, torch_summarize
 
 parser = argparse.ArgumentParser(
     description="""
