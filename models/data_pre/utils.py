@@ -71,7 +71,7 @@ def transform_images_from_test(new_file="data/test/test_csv/test.csv"):
             )
 
             value = value.flatten()
-            value = np.append([filename, classe], value)
+            value = np.append([classe, filename], value)
 
             with open(new_file, "a") as f:
                 writer = csv.writer(f)
