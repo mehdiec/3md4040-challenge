@@ -105,7 +105,7 @@ DIM = 100, 100
 class PlanktonsDataset(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, csv_file, root_dir, transform=None):
+    def __init__(self, csv_file, root_dir, transform=None, test=False):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -119,6 +119,7 @@ class PlanktonsDataset(Dataset):
         self.transform = transform
         self.name = self.data.iloc[:, 0]
         self.targets = self.data.iloc[:, 1]
+        self.test = test
 
     def __len__(self):
         return len(self.data)
@@ -131,10 +132,15 @@ class PlanktonsDataset(Dataset):
         landmarks = np.array([landmarks])
         landmarks = landmarks.astype("float").reshape(-1, 28)
 
-        img, target = landmarks, int(self.targets[idx])
+        if self.test:
+            img, target = landmarks, 420
+        else:
+            img, target = landmarks, int(self.targets[idx])
 
-        if self.transform:
-            img = self.transform(img)
+        if self.test:
+            target = self.data.iloc[idx, 1]
+        else:
+            target = ""
 
         return img, target
 
@@ -142,7 +148,7 @@ class PlanktonsDataset(Dataset):
 def compute_mean_std(loader):
     # Compute the mean over minibatches
     mean_img = None
-    for imgs, _ in loader:
+    for imgs, _, _ in loader:
         if mean_img is None:
             mean_img = torch.zeros_like(imgs[0])
         mean_img += imgs.sum(dim=0)
@@ -150,7 +156,7 @@ def compute_mean_std(loader):
 
     # Compute the std over minibatches
     std_img = torch.zeros_like(mean_img)
-    for imgs, _ in loader:
+    for imgs, _, _ in loader:
         std_img += ((imgs - mean_img) ** 2).sum(dim=0)
     std_img /= len(loader.dataset)
     std_img = torch.sqrt(std_img)
@@ -238,7 +244,9 @@ def load_coakroaches(
     train_dataset, valid_dataset = torch.utils.data.dataset.random_split(
         train_valid_dataset, [nb_train, nb_valid]
     )
-
+    test_dataset = PlanktonsDataset(
+        csv_file="data/test/test_csv/test.csv", root_dir="data/test/", test=True
+    )
     # Load the test set
     # test_dataset = torchvision.datasets.FashionMNIST(root=dataset_dir, train=False)
 
@@ -246,7 +254,7 @@ def load_coakroaches(
     data_transforms = {
         "train": transforms.ToTensor(),
         "valid": transforms.ToTensor(),
-        # "test": transforms.ToTensor(),
+        "test": transforms.ToTensor(),
     }
 
     if train_augment_transforms:
@@ -276,7 +284,7 @@ def load_coakroaches(
 
     train_dataset = DatasetTransformer(train_dataset, data_transforms["train"])
     valid_dataset = DatasetTransformer(valid_dataset, data_transforms["valid"])
-    # test_dataset = DatasetTransformer(test_dataset, data_transforms["test"])
+    test_dataset = DatasetTransformer(test_dataset, data_transforms["test"])
 
     # shuffle = True : reshuffles the data at every epoch
     train_loader = torch.utils.data.DataLoader(
@@ -293,14 +301,14 @@ def load_coakroaches(
         num_workers=num_workers,
     )
 
-    # test_loader = torch.utils.data.DataLoader(
-    #    dataset=test_dataset,
-    #    batch_size=batch_size,
-    #    shuffle=False,
-    #    num_workers=num_workers,
-    # )
+    test_loader = torch.utils.data.DataLoader(
+        dataset=test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+    )
 
-    return train_loader, valid_loader, "", copy.copy(normalization_function)
+    return train_loader, valid_loader, test_loader, copy.copy(normalization_function)
 
 
 def display_tensor_samples(tensor_samples, labels=None, filename=None):
@@ -326,7 +334,7 @@ def display_samples(loader, nsamples, filename=None):
     import matplotlib.pyplot as plt
     import matplotlib.cm as cm
 
-    imgs, labels = next(iter(train_loader))
+    imgs, labels, _ = next(iter(train_loader))
     display_tensor_samples(imgs[:nsamples], labels[:nsamples], filename)
     # print("imgs is of shape {},  labels of shape {}'".format(imgs.shape, labels.shape))
 

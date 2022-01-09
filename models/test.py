@@ -3,12 +3,13 @@ from argparse import RawTextHelpFormatter
 import os
 import sys
 import time
+from data_pre.preprocesse import PlanktonsDataset
 import torch
 import torchvision
 import torchvision.transforms as transforms
+from data_pre.preprocesse import load_coakroaches
 
-
-from utils import torch_summarize, test
+from utils import test_csv, torch_summarize, test
 
 parser = argparse.ArgumentParser(
     description="""
@@ -42,13 +43,21 @@ parser.add_argument(
     required=True,
 )
 
+parser.add_argument(
+    "--dir",
+    type=str,
+    help="Which directory will the result be dumped",
+    required=True,
+)
+
+
 args = parser.parse_args()
 
 
 img_size = (1, 28, 28)
 num_classes = 10
 batch_size = 128
-dataset_dir = args.dataset_dir
+
 use_gpu = args.use_gpu
 if use_gpu:
     device = torch.device("cuda")
@@ -56,17 +65,14 @@ else:
     device = torch.device("cpu")
 
 ##################################################### Data loading
-test_transforms = transforms.ToTensor()
+train_augment_transforms = None
 
-test_dataset = torchvision.datasets.FashionMNIST(
-    root=dataset_dir, train=False, transform=test_transforms
-)
 
-test_loader = torch.utils.data.DataLoader(
-    dataset=test_dataset,
-    batch_size=batch_size,
-    shuffle=False,
-    num_workers=args.num_workers,
+(train_loader, valid_loader, test_loader, normalization_function,) = load_coakroaches(
+    0.2,
+    batch_size,
+    args.num_workers,
+    train_augment_transforms,
 )
 
 
@@ -102,8 +108,4 @@ model.eval()
 
 criterion = torch.nn.CrossEntropyLoss()
 
-t0 = time.time()
-test_loss, test_acc = test(model, test_loader, criterion, device)
-t1 = time.time()
-print("Evaluation in {} s.".format(t1 - t0))
-print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
+test_csv(model, test_loader, device, dir=args.dir)

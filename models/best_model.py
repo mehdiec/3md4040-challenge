@@ -75,7 +75,7 @@ else:
     device = torch.device("cpu")
 
 # Where to store the logs
-logdir = "./logs/fancyCNN_0"
+logdir = "./logs/fancyCNN_9"
 print("Logging to {}".format(logdir))
 if not os.path.exists(args.logdir):
     os.mkdir(args.logdir)
@@ -103,10 +103,11 @@ print("Loading and testing the best model")
 
 best_model_path = logdir + "/best_model.pt"
 loaded_dict = torch.load(best_model_path)
-model = loaded_dict["model"].to(device)
+model = loaded_dict.to(device)
 
 model.eval()
 
 val_loss, val_acc = utils.test(model, valid_loader, loss, device)
+torch.save(model, logdir + "/best_model.pt")
 
 print(" Validation : Loss : {:.4f}, Acc : {:.4f}".format(val_loss, val_acc))
