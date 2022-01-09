@@ -3,6 +3,7 @@
 1. Prétraiter les données
     ```sh 
     python3 models/data_pre/do.py
+    python3 models/data_pre/do_test.py
     ```
 2. Entrainer un modèle
    ```sh 
@@ -16,7 +17,9 @@
     python3 models/test.py --paramfile ./logs/fancyCNN_9/best_model.pt --dir result --model fancyCNN
 
    ```
+4. Generer le csv des resultat a partir d'un modele entrainer
+    ```sh  
+    python3 models/test.py --paramfile ./logs/fancyCNN_9/best_model.pt --dir result --model fancyCNN
 
-Pour ajouter un modèle le mettre dans ann puis l'ajouter a l'argpaser de train.py.
+   ```
 
-J'ai pas encore fais le test.py mais c'est rapide
