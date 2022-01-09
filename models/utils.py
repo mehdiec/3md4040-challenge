@@ -134,6 +134,7 @@ def test(model, loader, f_loss, device):
             data = scores(y_true, y_pred)
 
             with open("app.json", "w") as f:
+
                 json.dump(data, f)
 
         print(f"macro F1 : {f11/N}")
@@ -166,13 +167,12 @@ def test_csv(model, loader, device, dir):
         model.eval()
         N = 0
         tot_loss, correct, f11 = 0.0, 0, 0.0
-        for _, (inputs, _) in enumerate(loader):
+        for _, (inputs, names) in enumerate(loader):
             inputs = inputs.to(device)
             inputs = inputs.float()
 
             outputs = model(inputs)
             input_cpu = inputs.cpu().data.numpy()
-            names = [inp.name for inp in input_cpu]
 
             # For the accuracy
             predicted_targets = outputs.argmax(dim=1)
@@ -334,7 +334,7 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
 
 class SquarePad:
     def __call__(self, image):
-        max_wh = None  # Max longueur largeur des images du dataset à determiner
+        max_wh = None  # Max longueur largeur des images du dataset �� determiner
         p_left, p_top = [(max_wh - s) // 2 for s in image.size]
         p_right, p_bottom = [
             max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
