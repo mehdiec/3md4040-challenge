@@ -6,9 +6,10 @@ import numpy as np
 import cv2
 import os.path
 import copy
+from sklearn.model_selection import StratifiedShuffleSplit
 
 # from plankton import PlanktonsDataset
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, Subset
 import pandas as pd
 
 TRAIN_CONST = [
@@ -209,6 +210,24 @@ def transform_images_from_folder(train_dir):
 
 # save this stuff somewhere
 # split in validation and training test set
+def make_stratified_split(train_valid_dataset, valid_ratio=0.2):
+
+    df = pd.read_csv("data/train/train_csv/train.csv")
+    target = df["img_name"]
+    x = df["img_class"]
+
+    # 2.
+    split = StratifiedShuffleSplit(n_splits=1, test_size=valid_ratio, random_state=42)
+    for train_index, test_index in split.split(x, target):
+        train_index = train_index
+        test_index = test_index
+
+    print("Train size: {}\nValid size: {}".format(len(train_index), len(test_index)))
+
+    return [
+        Subset(train_valid_dataset, train_index),
+        Subset(train_valid_dataset, test_index),
+    ]
 
 
 def load_coakroaches(
@@ -232,14 +251,9 @@ def load_coakroaches(
     )
 
     # Split it into training and validation sets
-    nb_train, nb_valid = int((1.0 - valid_ratio) * len(train_valid_dataset)), int(
-        valid_ratio * len(train_valid_dataset)
-    )
-    if nb_train + nb_valid != len(train_valid_dataset):
-        nb_train = nb_train + 1
 
-    train_dataset, valid_dataset = torch.utils.data.dataset.random_split(
-        train_valid_dataset, [nb_train, nb_valid]
+    train_dataset, valid_dataset = make_stratified_split(
+        train_valid_dataset, valid_ratio=0.2
     )
     test_dataset = PlanktonsDataset(
         csv_file="data/test/test_csv/test.csv", root_dir="data/test/", test=True
