@@ -142,7 +142,7 @@ def test(model, loader, f_loss, device):
 
                 json.dump(data, f)
 
-        return tot_loss / N, correct / N, f11 / N
+        return tot_loss / N, correct / N, f11
 
 
 def test_csv(model, loader, device, dir):

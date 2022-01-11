@@ -124,6 +124,42 @@ class FancyCNN(nn.Module):
         return y
 
 
+class PenCNN(nn.Module):
+    def __init__(self, num_classes):
+        super(PenCNN, self).__init__()
+
+        base_n = 64
+        self.features = nn.Sequential(
+            *conv_bn_relu(1, base_n, 3),
+            *conv_bn_relu(base_n, base_n, 3),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.4),
+            *conv_bn_relu(base_n, 2 * base_n, 3),
+            *conv_bn_relu(2 * base_n, 2 * base_n, 3),
+            nn.MaxPool2d(kernel_size=2),
+            nn.Dropout(0.4),
+            *conv_bn_relu(2 * base_n, 4 * base_n, 3),
+            *conv_bn_relu(4 * base_n, 4 * base_n, 3),
+            nn.AvgPool2d(kernel_size=7)
+        )
+
+        self.lin1 = nn.Linear(4 * base_n, num_classes)
+        # self.classifier = nn.Sequential(
+        #        nn.Dropout(0.5),
+        #        nn.Linear(4*base_n, num_classes)
+        # )
+
+    def penalty(self):
+        return 1e-4 * self.lin1.weight.norm(2)
+
+    def forward(self, x):
+        x = self.features(x)
+        x = x.view(x.size()[0], -1)
+        y = self.lin1(nn.functional.dropout(x, 0.5, self.training, inplace=True))
+        # y = self.classifier(x)
+        return y
+
+
 def build_model(model_name, img_size, num_classes):
     model = None
     if model_name == "vanilla":
