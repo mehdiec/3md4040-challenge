@@ -83,7 +83,7 @@ if not os.path.exists(args.logdir):
 if not os.path.exists(logdir):
     os.mkdir(logdir)
 
-# FashionMNIST dataset
+# Data augmentation
 train_augment_transforms = None
 if args.data_augment:
     train_augment_transforms = transforms.Compose(
