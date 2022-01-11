@@ -18,6 +18,7 @@ def transform_images_from_folder(train_dir, new_file="data/train/train_csv/train
         writer = csv.writer(f)
         writer.writerow(COL)
     for folder in train_dir:
+        print(folder)
 
         classe = int(folder[:3])
         real_folder = "data/train/" + folder
