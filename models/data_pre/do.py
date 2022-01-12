@@ -89,7 +89,6 @@ TRAIN_CONST = [
     "085_Limacidae",
 ]
 
-
 import os
 import os.path
 import numpy as np
@@ -127,9 +126,7 @@ def aug(dir_train, new_train_dir, pad=False, add=2500):
                 new_im_dir = os.path.join(new_elt_dir, im)
 
                 image = Image.open(dir_image)
-                max_wh = (
-                    300  # Max longueur largeur des images du dataset ������ determiner
-                )
+                max_wh = 300  # Max longueur largeur des images du dataset ������������������ determiner
                 p_left, p_top = [(max_wh - s) // 2 for s in image.size]
                 p_right, p_bottom = [
                     max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
@@ -169,5 +166,4 @@ def aug(dir_train, new_train_dir, pad=False, add=2500):
 
 aug(train_dataset_directory, new_train_dir1, pad=True)
 
-
-# transform_images_from_folder(TRAIN_CONST)
+transform_images_from_folder(TRAIN_CONST)
