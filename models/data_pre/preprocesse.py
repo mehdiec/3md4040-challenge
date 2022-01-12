@@ -11,11 +11,12 @@ import copy
 # from plankton import PlanktonsDataset
 from torch.utils.data import Dataset, Subset
 import pandas as pd
+from tqdm import tqdm
 
 TRAIN_CONST = [
-    "000_Candaciidae",
-    "043_larvae__Annelida",
-    "001_detritus",
+    # "000_Candaciidae",
+    # "043_larvae__Annelida",
+    # "001_detritus",
     "044_Rhopalonema",
     "002_Calocalanus_pavo",
     "045_egg__other",
@@ -128,9 +129,13 @@ class PlanktonsDataset(Dataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
+        if self.test:
+            landmarks = self.data.iloc[idx, 2:]
+        else:
+            landmarks = self.data.iloc[idx, 2:]  # 3 j ai merde
 
-        landmarks = self.data.iloc[idx, 2:]
         landmarks = np.array([landmarks])
+
         landmarks = landmarks.astype("float").reshape(-1, 28)
 
         if self.test:
@@ -138,7 +143,7 @@ class PlanktonsDataset(Dataset):
             target = self.data.iloc[idx, 1]
 
         else:
-            img, target = landmarks, int(self.targets[idx])
+            img, target = landmarks, int(self.targets[idx][:3])
 
         return img, target
 
@@ -146,7 +151,7 @@ class PlanktonsDataset(Dataset):
 def compute_mean_std(loader):
     # Compute the mean over minibatches
     mean_img = None
-    for imgs, _, _ in loader:
+    for imgs, _ in loader:
         if mean_img is None:
             mean_img = torch.zeros_like(imgs[0])
         mean_img += imgs.sum(dim=0)
@@ -154,7 +159,7 @@ def compute_mean_std(loader):
 
     # Compute the std over minibatches
     std_img = torch.zeros_like(mean_img)
-    for imgs, _, _ in loader:
+    for imgs, _ in loader:
         std_img += ((imgs - mean_img) ** 2).sum(dim=0)
     std_img /= len(loader.dataset)
     std_img = torch.sqrt(std_img)
@@ -191,12 +196,12 @@ class CenterReduce:
 
 def transform_images_from_folder(train_dir):
     images = []
-    for folder in train_dir:
+    for folder in tqdm(train_dir):
         print(folder)
 
         classe = int(folder[:3])
         real_folder = "data/train/" + folder
-        for filename in os.listdir(real_folder):
+        for filename in tqdm(os.listdir(real_folder)):
             img = cv2.imread(os.path.join(real_folder, filename))
             if img is not None:
 
@@ -271,7 +276,7 @@ def load_coakroaches(
 
     # Load the dataset for the training/validation sets
     train_valid_dataset = PlanktonsDataset(
-        csv_file="data/train/train_csv/train.csv", root_dir="data/train/"
+        csv_file="data/train/train_csv/full_train.csv", root_dir="data/train/"
     )
 
     # Split it into training and validation sets
@@ -331,6 +336,7 @@ def load_coakroaches(
             data_transforms[k] = transforms.Compose(
                 [old_transforms, transforms.Lambda(lambda x: normalization_function(x))]
             )
+
     else:
         normalization_function = None
 
@@ -361,122 +367,3 @@ def load_coakroaches(
     )
 
     return train_loader, valid_loader, test_loader, copy.copy(normalization_function)
-
-
-def display_tensor_samples(tensor_samples, labels=None, filename=None):
-    import matplotlib.pyplot as plt
-    import matplotlib.cm as cm
-
-    fig = plt.figure(figsize=(20, 5), facecolor="w")
-    nsamples = tensor_samples.shape[0]
-    for i in range(nsamples):
-        ax = plt.subplot(1, nsamples, i + 1)
-        plt.imshow(tensor_samples[i, 0, :, :], vmin=0, vmax=1.0, cmap=cm.gray)
-        # plt.axis('off')
-        if labels is not None:
-            ax.set_title("{}".format(classes_names[labels[i]]), fontsize=15)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-    if filename:
-        plt.savefig(filename, bbox_inches="tight")
-    plt.show()
-
-
-def display_samples(loader, nsamples, filename=None):
-    import matplotlib.pyplot as plt
-    import matplotlib.cm as cm
-
-    imgs, labels, _ = next(iter(train_loader))
-    display_tensor_samples(imgs[:nsamples], labels[:nsamples], filename)
-    # print("imgs is of shape {},  labels of shape {}'".format(imgs.shape, labels.shape))
-
-    # fig=plt.figure(figsize=(20,5),facecolor='w')
-    # for i in range(nsamples):
-    #    ax = plt.subplot(1,nsamples, i+1)
-    #    plt.imshow(imgs[i, 0, :, :], vmin=0, vmax=1.0, cmap=cm.gray)
-    #    #plt.axis('off')
-    #    ax.set_title("{}".format(classes_names[labels[i]]), fontsize=15)
-    #    ax.get_xaxis().set_visible(False)
-    #    ax.get_yaxis().set_visible(False)
-    # if filename:
-    #    plt.savefig(filename, bbox_inches='tight')
-    # plt.show()
-
-
-if __name__ == "__main__":
-
-    num_threads = 4
-    valid_ratio = 0.2
-    batch_size = 128
-    classes_names = TRAIN_CONST
-
-    train_loader, valid_loader, test_loader, _ = load_coakroaches(
-        valid_ratio, batch_size, num_threads, False
-    )
-
-    print(
-        "The train set contains {} images, in {} batches".format(
-            len(train_loader.dataset), len(train_loader)
-        )
-    )
-    print(
-        "The validation set contains {} images, in {} batches".format(
-            len(valid_loader.dataset), len(valid_loader)
-        )
-    )
-    # print(
-    #    "The test set contains {} images, in {} batches".format(
-    #        len(test_loader.dataset), len(test_loader)
-    #    )
-    # )
-
-    # display_samples(train_loader, 10, 'fashionMNIST_samples.png')
-
-    ###################################################################################
-    ## Data augmentation
-
-    train_valid_dataset = PlanktonsDataset(
-        csv_file="data/train/train_csv/train.csv", root_dir="data/train/"
-    )
-
-    train_augment = transforms.Compose(
-        [
-            transforms.RandomHorizontalFlip(0.5),
-            RandomAffine(degrees=10, translate=(0.1, 0.1)),
-        ]
-    )
-
-    # data augment a single sample several times
-    # img, label = train_valid_dataset[np.random.randint(len(train_valid_dataset))]
-    # Timg = transforms.functional.to_tensor(img)
-    # n_augmented_samples = 10
-    # aug_imgs = torch.zeros(
-    #    n_augmented_samples, Timg.shape[0], Timg.shape[1], Timg.shape[2]
-    # )
-    # for i in range(n_augmented_samples):
-    #    img = Image.fromarray(np.uint8(cm.gist_earth(img) * 255))
-    #    aug_imgs[i] = transforms.ToTensor()(train_augment(img))
-    # print("I augmented a {}".format(classes_names[label]))
-    # display_tensor_samples(aug_imgs, filename="fashionMNIST_sample_augment.png")
-
-    # Test with data augmentation
-    train_augment = transforms.Compose(
-        [
-            transforms.RandomHorizontalFlip(0.5),
-            RandomAffine(degrees=10, translate=(0.1, 0.1)),
-        ]
-    )
-
-    train_loader, _, _, _ = load_coakroaches(
-        valid_ratio,
-        batch_size,
-        num_threads,
-        False,
-        train_augment_transforms=train_augment,
-    )
-    # display_samples(train_loader, 10, "fashionMNIST_samples_augment.png")
-
-    # Loading normalized datasets
-    train_loader, valid_loader, _, _ = load_coakroaches(
-        valid_ratio, batch_size, num_threads, True
-    )

@@ -3,6 +3,8 @@ import csv
 from PIL import Image
 import numpy as np
 
+from pathlib import Path
+from tqdm import tqdm
 
 DIM = 28, 28
 
@@ -14,14 +16,18 @@ COL = ["img_class", "img_name"] + [
 
 def transform_images_from_folder(train_dir, new_file="data/train/train_csv/train.csv"):
     images = []
-    with open(new_file, "a") as f:
-        writer = csv.writer(f)
-        writer.writerow(COL)
-    for folder in train_dir:
+
+    my_file = Path(new_file)
+    if not my_file.is_file():
+        with open(new_file, "a") as f:
+            writer = csv.writer(f)
+            writer.writerow(COL)
+    for folder in tqdm(train_dir):
+        print(folder)
 
         classe = int(folder[:3])
         real_folder = "data/train/" + folder
-        for filename in os.listdir(real_folder):
+        for filename in tqdm(os.listdir(real_folder)):
             img_file = Image.open(os.path.join(real_folder, filename))
             if img_file is not None:
 

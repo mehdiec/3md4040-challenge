@@ -88,4 +88,82 @@ TRAIN_CONST = [
     "042_Annelida",
     "085_Limacidae",
 ]
+
+import os
+import os.path
+import numpy as np
+from PIL import Image
+import torchvision.transforms.functional as F
+from random import randint
+import torchvision.transforms as transforms
+
+############################################################################################ Datasets
+
+
+train_dataset_directory = "data/train/"
+new_train_dir1 = "data/train/"
+transform = transforms.Compose(
+    [
+        transforms.ToPILImage(),
+        transforms.RandomHorizontalFlip(p=0.5),
+        # transforms.RandomRotation(degrees=(-90, 90)),
+        transforms.RandomVerticalFlip(p=0.5),
+        transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
+    ]
+)
+
+
+def aug(dir_train, new_train_dir, pad=False, add=2500):
+    for elt in os.listdir(dir_train):
+        print(f"prepro {elt}")
+
+        dir_class = os.path.join(dir_train, elt)
+        new_elt_dir = os.path.join(new_train_dir, elt)
+        if pad:
+            for im in os.listdir(dir_class):
+
+                dir_image = os.path.join(dir_class, im)
+                new_im_dir = os.path.join(new_elt_dir, im)
+
+                image = Image.open(dir_image)
+                max_wh = 300  # Max longueur largeur des images du dataset ������������������ determiner
+                p_left, p_top = [(max_wh - s) // 2 for s in image.size]
+                p_right, p_bottom = [
+                    max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
+                ]
+                padding = (p_left, p_top, p_right, p_bottom)
+                # convert_tensor = transforms.ToTensor()
+                # image = convert_tensor(image)
+                # print(image)
+                new_image = F.pad(
+                    image, padding, 255, "constant"
+                )  # valeur 0 pour la couleur noir, 255 pour blanche
+
+                new_image = new_image.save(new_im_dir)
+
+        listdirr = os.listdir(new_elt_dir)
+        c = len(listdirr) - 1
+        f_l = int(add - c / 5) + 1
+        print(f_l)
+        if f_l > 0:
+            for _ in range(f_l):
+
+                j = randint(0, c)
+
+                im = listdirr[j]
+                new_im_dir = os.path.join(new_elt_dir, im)
+                image = Image.open(new_im_dir)
+                image = np.array(image)
+
+                augmented_img = transforms.ToTensor()(transform(image))
+
+                augmented_img = transform(image)
+                # augmented_img = augmentations["image"]
+                newer_img_name = "aug_" + str(j) + ".jpg"
+                newer_im_dir = os.path.join(new_elt_dir, newer_img_name)
+                augmented_img = augmented_img.save(newer_im_dir)
+
+
+aug(train_dataset_directory, new_train_dir1, pad=True)
+
 transform_images_from_folder(TRAIN_CONST)
