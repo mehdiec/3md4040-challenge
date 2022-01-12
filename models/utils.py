@@ -107,8 +107,10 @@ def test(model, loader, f_loss, device):
         # but is important with layers such as dropout, batchnorm, ..
         model.eval()
         N = 0
+        cnt = 0
         tot_loss, correct, f11 = 0.0, 0, 0.0
         for i, (inputs, targets) in enumerate(loader):
+            cnt += 1
             inputs, targets = inputs.to(device), targets.to(device)
             inputs = inputs.float()
 
@@ -142,7 +144,7 @@ def test(model, loader, f_loss, device):
 
                 json.dump(data, f)
 
-        return tot_loss / N, correct / N, f11
+        return tot_loss / N, correct / N, f11 / cnt
 
 
 def test_csv(model, loader, device, dir):
@@ -340,13 +342,15 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
 
 class SquarePad:
     def __call__(self, image):
-        max_wh = 300  # Max longueur largeur des images du dataset ������ determiner
+        max_wh = 300  # Max longueur largeur des images du dataset ������������������ determiner
         p_left, p_top = [(max_wh - s) // 2 for s in image.size]
         p_right, p_bottom = [
             max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
         ]
         padding = (p_left, p_top, p_right, p_bottom)
-        return F.pad(image, padding, 255, "constant")  # valeur 0 pour la couleur noir, 255 pour blanche
+        return F.pad(
+            image, padding, 255, "constant"
+        )  # valeur 0 pour la couleur noir, 255 pour blanche
 
 
 """
