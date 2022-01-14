@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init
 
-
+# BIEN CHOISIR LES INPUT LAYER POUR LA DERNIERE COUCHE
 def linear(dim_in, dim_out):
     return [nn.Linear(dim_in, dim_out)]
 
@@ -107,7 +107,7 @@ class FancyCNN(nn.Module):
             nn.AvgPool2d(kernel_size=7)
         )
 
-        self.lin1 = nn.Linear(4 * base_n, num_classes)
+        self.lin1 = nn.Linear(32 * 32, num_classes)
         # self.classifier = nn.Sequential(
         #        nn.Dropout(0.5),
         #        nn.Linear(4*base_n, num_classes)
@@ -117,8 +117,10 @@ class FancyCNN(nn.Module):
     #    return 1e-4 * self.lin1.weight.norm(2)
 
     def forward(self, x):
+
         x = self.features(x)
         x = x.view(x.size()[0], -1)
+
         y = self.lin1(nn.functional.dropout(x, 0.5, self.training, inplace=True))
         # y = self.classifier(x)
         return y
@@ -143,7 +145,7 @@ class PenCNN(nn.Module):
             nn.AvgPool2d(kernel_size=7)
         )
 
-        self.lin1 = nn.Linear(4 * base_n, num_classes)
+        self.lin1 = nn.Linear(32 * 32, num_classes)  # 144*144
         # self.classifier = nn.Sequential(
         #        nn.Dropout(0.5),
         #        nn.Linear(4*base_n, num_classes)
@@ -153,7 +155,9 @@ class PenCNN(nn.Module):
         return 1e-4 * self.lin1.weight.norm(2)
 
     def forward(self, x):
+
         x = self.features(x)
+
         x = x.view(x.size()[0], -1)
         y = self.lin1(nn.functional.dropout(x, 0.5, self.training, inplace=True))
         # y = self.classifier(x)
@@ -166,6 +170,8 @@ def build_model(model_name, img_size, num_classes):
         model = VanillaCNN(num_classes)
     elif model_name == "fancyCNN":
         model = FancyCNN(num_classes)
+    elif model_name == "PenCNN":
+        model = PenCNN(num_classes)
     else:
         raise NotImplementedError("Unknown model {}".format(model_name))
     return model
