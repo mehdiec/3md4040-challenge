@@ -183,6 +183,8 @@ for t in range(epochs):
     tensorboard_writer.add_scalar("metrics/val_loss", val_loss, t)
     tensorboard_writer.add_scalar("metrics/val_acc", val_acc, t)
     tensorboard_writer.add_scalar("metrics/val_f1", val_f1, t)
+    # tensorboard_writer.add_scalar("metrics/test_loss", test_loss, t)
+    # tensorboard_writer.add_scalar("metrics/test_acc", test_acc, t)
     sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
 
     with open(f"result__{t}.json", "w") as fp:
@@ -204,7 +206,10 @@ val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
 print(
     "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(val_loss, val_acc, val_f1)
 )
+utils.test_csv(model, test_loader, device, dir=logdir)
 
+# test_loss, test_acc = utils.test(model, test_loader, loss, device)
+# print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
 sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
 import json
 
