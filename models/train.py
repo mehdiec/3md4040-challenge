@@ -177,7 +177,7 @@ for t in range(epochs):
     history_file.write(
         "{}\t{}\t{}\t{}\t{}\n".format(t, train_loss, train_acc, val_loss, val_acc)
     )
-    model_checkpoint.update(val_loss)
+    model_checkpoint.update(val_f1)
     tensorboard_writer.add_scalar("metrics/train_loss", train_loss, t)
     tensorboard_writer.add_scalar("metrics/train_acc", train_acc, t)
     tensorboard_writer.add_scalar("metrics/val_loss", val_loss, t)
