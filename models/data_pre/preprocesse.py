@@ -39,19 +39,17 @@ class TrainValidDataset(Dataset):
         self.samples = []
 
         for image_paths in os.listdir(data_root):
-            cnt = 0
 
             real_path = os.path.join(data_root, image_paths)
             name = int(image_paths.split("/")[-1][:3])
-            for filename in os.listdir(real_path):
-                cnt += 1
-                img_file = os.path.join(real_path, filename)
+            boom = 1
+            if len(os.listdir(real_path)) < 1999:
+                boom = int(2000 / len(os.listdir(real_path)))
+            for _ in range(boom):
+                for filename in os.listdir(real_path):
 
-                self.samples.append((name, img_file))
-
-                if cnt == 200000:
-                    print(f"limite image set a {cnt}")
-                    break
+                    img_file = os.path.join(real_path, filename)
+                    self.samples.append((name, img_file))
 
     def __len__(self):
         return len(self.samples)
