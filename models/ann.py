@@ -2,6 +2,8 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.init
+import torchvision
+
 
 # BIEN CHOISIR LES INPUT LAYER POUR LA DERNIERE COUCHE
 def linear(dim_in, dim_out):
@@ -164,6 +166,12 @@ class PenCNN(nn.Module):
         return y
 
 
+# Redefining the final fully connected layer
+
+
+# Adding a convolutional layer to match the channels to the resnet model
+
+
 def build_model(model_name, img_size, num_classes):
     model = None
     if model_name == "vanilla":
@@ -172,6 +180,13 @@ def build_model(model_name, img_size, num_classes):
         model = FancyCNN(num_classes)
     elif model_name == "PenCNN":
         model = PenCNN(num_classes)
+    elif model_name == "resnet":
+        resnet = torchvision.models.resnet18(pretrained=True)
+        infeat = resnet.fc.in_features
+        resnet.fc = nn.Linear(infeat, num_classes)
+        resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        model = resnet
+
     else:
         raise NotImplementedError("Unknown model {}".format(model_name))
     return model
