@@ -54,15 +54,14 @@ parser.add_argument(
 
 parser.add_argument(
     "--model",
-    choices=["vanilla", "fancyCNN", "PenCNN"],
+    choices=["vanilla", "fancyCNN", "PenCNN", "resnet"],
     action="store",
     required=True,
 )
 
 args = parser.parse_args()
+img_width, img_height = 64, 64
 
-img_width = 64  # 256
-img_height = 64  # 256
 img_size = (1, img_height, img_width)
 num_classes = 86
 batch_size = 128
@@ -91,8 +90,8 @@ if args.data_augment:
     train_augment_transforms = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(0.5),
-            RandomAffine(degrees=10, translate=(0.1, 0.1)),
-            rotation_transform,
+            transforms.RandomVerticalFlip(p=0.5),
+            transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
         ]
     )
 
@@ -111,9 +110,8 @@ model = model.to(device)
 
 loss = nn.CrossEntropyLoss()  # This computes softmax internally
 # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
-optimizer = torch.optim.Adam(
-    model.parameters(), lr=0.0005, weight_decay=args.weight_decay
-)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0004, weight_decay=0)
+exp_lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
 
 # Where to save the logs of the metrics
 history_file = open(logdir + "/history", "w", 1)
@@ -169,7 +167,11 @@ for t in range(epochs):
     train_loss, train_acc = utils.train(model, train_loader, loss, optimizer, device)
 
     val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
-    print(" Validation : Loss : {:.4f}, Acc : {:.4f}".format(val_loss, val_acc))
+    print(
+        "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(
+            val_loss, val_acc, val_f1
+        )
+    )
 
     # test_loss, test_acc = utils.test(model, test_loader, loss, device)
     # print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
@@ -177,7 +179,7 @@ for t in range(epochs):
     history_file.write(
         "{}\t{}\t{}\t{}\t{}\n".format(t, train_loss, train_acc, val_loss, val_acc)
     )
-    model_checkpoint.update(val_f1)
+    model_checkpoint.update(val_loss)
     tensorboard_writer.add_scalar("metrics/train_loss", train_loss, t)
     tensorboard_writer.add_scalar("metrics/train_acc", train_acc, t)
     tensorboard_writer.add_scalar("metrics/val_loss", val_loss, t)
@@ -213,5 +215,5 @@ utils.test_csv(model, test_loader, device, dir=logdir)
 sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
 import json
 
-with open("result.json", "w") as fp:
+with open("result_true.json", "w") as fp:
     json.dump(sample, fp)
