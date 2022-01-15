@@ -1,151 +1,101 @@
-import torch
-import torchvision.transforms as transforms
-from torchvision.transforms import RandomAffine
-
-from sklearn.model_selection import StratifiedShuffleSplit
 import numpy as np
 import cv2
 import os.path
 import copy
+import glob
+import time
 
 # from plankton import PlanktonsDataset
-from torch.utils.data import Dataset, Subset
-import pandas as pd
-from tqdm import tqdm
-
-TRAIN_CONST = [
-    # "000_Candaciidae",
-    # "043_larvae__Annelida",
-    # "001_detritus",
-    "044_Rhopalonema",
-    "002_Calocalanus_pavo",
-    "045_egg__other",
-    "003_larvae__Crustacea",
-    "046_tail__Appendicularia",
-    "004_Podon",
-    "047_Euchirella",
-    "005_Sapphirinidae",
-    "048_calyptopsis",
-    "006_Calanidae",
-    "049_Haloptilus",
-    "007_zoea__Decapoda",
-    "050_eudoxie__Diphyidae",
-    "008_Gammaridea",
-    "051_egg__Actinopterygii",
-    "009_Oikopleuridae",
-    "052_nectophore__Diphyidae",
-    "010_Hyperiidea",
-    "053_head",
-    "011_zoea__Galatheidae",
-    "054_Penilia",
-    "012_nectophore__Physonectae",
-    "055_egg__Cavolinia_inflexa",
-    "013_Rhincalanidae",
-    "056_Pontellidae",
-    "014_Acantharea",
-    "057_Coscinodiscus",
-    "015_Foraminifera",
-    "058_Acartiidae",
-    "016_nauplii__Crustacea",
-    "059_Corycaeidae",
-    "017_gonophore__Diphyidae",
-    "060_artefact",
-    "018_metanauplii",
-    "061_cirrus",
-    "019_megalopa",
-    "062_Luciferidae",
-    "020_Brachyura",
-    "063_Limacinidae",
-    "021_tail__Chaetognatha",
-    "064_cyphonaute",
-    "022_Doliolida",
-    "065_part__Copepoda",
-    "023_Scyphozoa",
-    "066_Fritillariidae",
-    "024_Ctenophora",
-    "067_Echinoidea",
-    "025_Bivalvia__Mollusca",
-    "068_Neoceratium",
-    "026_ephyra",
-    "069_Phaeodaria",
-    "027_Temoridae",
-    "070_Ostracoda",
-    "028_scale",
-    "071_Centropagidae",
-    "029_Evadne",
-    "072_Ophiuroidea",
-    "030_Copilia",
-    "073_nauplii__Cirripedia",
-    "031_Eucalanidae",
-    "074_Salpida",
-    "032_Pyrosomatida",
-    "075_Oithonidae",
-    "033_nectophore__Abylopsis_tetragona",
-    "076_eudoxie__Abylopsis_tetragona",
-    "034_Actinopterygii",
-    "077_cypris",
-    "035_Creseidae",
-    "078_Oncaeidae",
-    "036_Calanoida",
-    "079_gonophore__Abylopsis_tetragona",
-    "037_Decapoda",
-    "080_Harpacticoida",
-    "038_Obelia",
-    "081_Cavoliniidae",
-    "039_Noctiluca",
-    "082_Aglaura",
-    "040_Spumellaria",
-    "083_Euchaetidae",
-    "041_Chaetognatha",
-    "084_Tomopteridae",
-    "042_Annelida",
-    "085_Limacidae",
-]
-DIM = 100, 100
+from sklearn.model_selection import StratifiedShuffleSplit
+import torch
+from torch.utils.data import Dataset
+import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
+import random
+from PIL import Image
 
 
-class PlanktonsDataset(Dataset):
-    """Face Landmarks dataset."""
+class MyRotationTransform:
+    """Rotate by one of the given angles."""
 
-    def __init__(self, csv_file, root_dir, transform=None, test=False):
-        """
-        Args:
-            csv_file (string): Path to the csv file with annotations.
-            root_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
-        """
+    def __init__(self, angles=[-30, -15, 0, 15, 30]):
+        self.angles = angles
 
-        self.data = pd.read_csv(csv_file)
-        self.root_dir = root_dir
+    def __call__(self, x):
+        angle = random.choice(self.angles)
+        return TF.rotate(x, angle)
+
+
+rotation_transform = MyRotationTransform(angles=[-30, -15, 0, 15, 30])
+
+
+DIM = 64, 64  # 256, 256
+
+
+class TrainValidDataset(Dataset):
+    def __init__(self, data_root, transform=False):
+        self.data_root = data_root
         self.transform = transform
-        self.name = self.data.iloc[:, 0]
-        self.targets = self.data.iloc[:, 1]
-        self.test = test
+        self.samples = []
+
+        for image_paths in os.listdir(data_root):
+
+            real_path = os.path.join(data_root, image_paths)
+            name = int(image_paths.split("/")[-1][:3])
+            boom = 1
+            if len(os.listdir(real_path)) < 1999:
+                boom = int(2000 / len(os.listdir(real_path)))
+            for _ in range(boom):
+                for filename in os.listdir(real_path):
+
+                    img_file = os.path.join(real_path, filename)
+                    self.samples.append((name, img_file))
 
     def __len__(self):
-        return len(self.data)
+        return len(self.samples)
 
     def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-        if self.test:
-            landmarks = self.data.iloc[idx, 2:]
+        classe = self.samples[idx][0]
+        image = self.samples[idx][1]
+        image = Image.open(image)
+
+        if self.transform:
+            img_file = image.resize(DIM)
+            img_grey = img_file.convert("L")
+            img_grey = self.transform(image=img_file)["image"]
         else:
-            landmarks = self.data.iloc[idx, 2:]  # 3 j ai merde
+            img_file = image.resize(DIM)
+            img_grey = img_file.convert("L")
 
-        landmarks = np.array([landmarks])
+        return img_grey, classe
 
-        landmarks = landmarks.astype("float").reshape(-1, 28)
 
-        if self.test:
-            img = landmarks
-            target = self.data.iloc[idx, 1]
+class TestDataset(Dataset):
+    def __init__(self, data_root, transform=False):
 
+        self.transform = transform
+        self.samples = []
+        for filename in os.listdir(data_root):
+            name = filename.split("/")[-1]
+            img_file = os.path.join(data_root, filename)
+
+            self.samples.append((name, img_file))
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, idx):
+        classe = self.samples[idx][0]
+        image = self.samples[idx][1]
+        image = Image.open(image)
+        if self.transform:
+            img_file = image.resize(DIM)
+            img_grey = img_file.convert("L")
+            img_grey = self.transform(image=img_file)["image"]
         else:
-            img, target = landmarks, int(self.targets[idx][:3])
-
-        return img, target
+            img_file = image.resize(DIM)
+            img_grey = img_file.convert("L")
+        return img_grey, classe
 
 
 def compute_mean_std(loader):
@@ -194,68 +144,8 @@ class CenterReduce:
         return (x - self.mean) / self.std
 
 
-def transform_images_from_folder(train_dir):
-    images = []
-    for folder in tqdm(train_dir):
-        print(folder)
-
-        classe = int(folder[:3])
-        real_folder = "data/train/" + folder
-        for filename in tqdm(os.listdir(real_folder)):
-            img = cv2.imread(os.path.join(real_folder, filename))
-            if img is not None:
-
-                gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                # Normalize, rescale entries to lie in [0,1]
-                gray_img = gray_img.astype("float32") / 255
-                resized = cv2.resize(gray_img, DIM, interpolation=cv2.INTER_AREA)
-                images.append((resized, classe))
-    return images
-
-
 # save this stuff somewhere
 # split in validation and training test set
-
-
-def make_stratified_split(train_valid_dataset, valid_ratio=0.2, cache=False):
-
-    if cache:
-        with open("data/cache/train.npy", "rb") as f:
-            train_index = np.load(f)
-        with open("data/cache/valid.npy", "rb") as f:
-            test_index = np.load(f)
-        print(train_index, test_index)
-        return [
-            Subset(train_valid_dataset, train_index),
-            Subset(train_valid_dataset, test_index),
-        ]
-
-    else:
-        df = pd.read_csv("data/train/train_csv/train.csv")
-        target = df["img_name"]
-        x = df["img_class"]
-
-        # 2.
-        split = StratifiedShuffleSplit(
-            n_splits=1, test_size=valid_ratio, random_state=42
-        )
-        for train_index, test_index in split.split(x, target):
-            train_index = train_index
-            test_index = test_index
-            print(test_index)
-
-        print(
-            "Train size: {}\nValid size: {}".format(len(train_index), len(test_index))
-        )
-
-        with open("data/cache/train.npy", "wb") as f:
-            np.save(f, train_index)
-        with open("data/cache/valid.npy", "wb") as f:
-            np.save(f, test_index)
-        return [
-            Subset(train_valid_dataset, train_index),
-            Subset(train_valid_dataset, test_index),
-        ]
 
 
 def load_coakroaches(
@@ -263,47 +153,34 @@ def load_coakroaches(
     batch_size,
     num_workers,
     normalize,
-    dataset_dir=None,
     train_augment_transforms=None,
-    normalizing_tensor_path=None,
-    stratified=False,
 ):
 
-    if not dataset_dir:
-        dataset_dir = os.path.join(
-            os.path.expanduser("~"), "train", "train_csv", "train.csv"
-        )
+    start_time = time.time()
 
     # Load the dataset for the training/validation sets
-    train_valid_dataset = PlanktonsDataset(
-        csv_file="data/train/train_csv/full_train.csv", root_dir="data/train/"
+
+    # Split it into training and validation sets /mounts/Datasets1/ChallengeDeep/train/ /mounts/Datasets1/ChallengeDeep/test/imgs/
+    train_valid_dataset = TrainValidDataset(
+        data_root="/mounts/Datasets1/ChallengeDeep/train/"
     )
-
-    # Split it into training and validation sets
-
-    print("spliting")
-
     nb_train, nb_valid = int((1.0 - valid_ratio) * len(train_valid_dataset)), int(
         valid_ratio * len(train_valid_dataset)
     )
     if nb_train + nb_valid != len(train_valid_dataset):
         nb_train = nb_train + 1
 
-    if stratified:
-
-        train_dataset, valid_dataset = make_stratified_split(
-            train_valid_dataset, valid_ratio=0.2, cache=True
-        )
-    else:
-        train_dataset, valid_dataset = torch.utils.data.dataset.random_split(
-            train_valid_dataset, [nb_train, nb_valid]
-        )
-
-    print("DONE spliting")
-
-    test_dataset = PlanktonsDataset(
-        csv_file="data/test/test_csv/test.csv", root_dir="data/test/", test=True
+    print("Split is Done")
+    train_dataset, valid_dataset = torch.utils.data.dataset.random_split(
+        train_valid_dataset, [nb_train, nb_valid]
     )
+
+    print("Train Val loaded")
+
+    test_dataset = TestDataset(
+        "/mounts/Datasets1/ChallengeDeep/test/imgs/",
+    )
+    print("Test  loaded")
     # Load the test set
     # test_dataset = torchvision.datasets.FashionMNIST(root=dataset_dir, train=False)
 
@@ -336,7 +213,6 @@ def load_coakroaches(
             data_transforms[k] = transforms.Compose(
                 [old_transforms, transforms.Lambda(lambda x: normalization_function(x))]
             )
-
     else:
         normalization_function = None
 
@@ -365,5 +241,7 @@ def load_coakroaches(
         shuffle=False,
         num_workers=num_workers,
     )
+
+    print("--- %s seconds ---" % (time.time() - start_time))
 
     return train_loader, valid_loader, test_loader, copy.copy(normalization_function)

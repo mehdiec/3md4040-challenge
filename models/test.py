@@ -26,7 +26,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--model",
-    choices=["vanilla", "fancyCNN"],
+    choices=["vanilla", "fancyCNN", "PenCNN"],
     action="store",
     required=True,
 )
@@ -45,14 +45,18 @@ parser.add_argument(
     help="Which directory will the result be dumped",
     required=True,
 )
-
+parser.add_argument(
+    "--normalize",
+    help="Which normalization to apply to the input data",
+    action="store_true",
+)
 
 args = parser.parse_args()
 
 
-img_size = (1, 28, 28)
-num_classes = 10
-batch_size = 128
+img_size = (1, 64, 64)
+num_classes = 86
+batch_size = 256
 
 use_gpu = args.use_gpu
 if use_gpu:
@@ -68,6 +72,7 @@ train_augment_transforms = None
     0.2,
     batch_size,
     args.num_workers,
+    args.normalize,
     train_augment_transforms,
 )
 
@@ -89,12 +94,6 @@ if not issubclass(type(model), torch.nn.Module):
     )
     sys.exit(-1)
 
-print(torch_summarize(model))
-print(
-    "{} trainable parameters".format(
-        sum(p.numel() for p in model.parameters() if p.requires_grad)
-    )
-)
 
 model = model.to(device=device)
 

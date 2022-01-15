@@ -48,7 +48,7 @@ parser.add_argument(
 
 parser.add_argument(
     "--model",
-    choices=["vanilla", "fancyCNN"],
+    choices=["vanilla", "fancyCNN", "PenCNN"],
     action="store",
     required=True,
 )
@@ -56,8 +56,8 @@ parser.add_argument(
 args = parser.parse_args()
 
 
-img_width = 28
-img_height = 28
+img_width = 64
+img_height = 64
 img_size = (1, img_height, img_width)
 batch_size = 128
 
@@ -71,7 +71,7 @@ else:
     device = torch.device("cpu")
 
 # Where to store the logs
-logdir = "./logs/fancyCNN_11"
+logdir = "./logs/PenCNN_9"
 print("Logging to {}".format(logdir))
 if not os.path.exists(args.logdir):
     os.mkdir(args.logdir)
@@ -108,3 +108,9 @@ torch.save(model, logdir + "/best_model.pt")
 print(
     "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(val_loss, val_acc, val_f1)
 )
+
+sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
+import json
+
+with open("result.json", "w") as fp:
+    json.dump(sample, fp)

@@ -12,8 +12,9 @@ from torch.utils.tensorboard import SummaryWriter
 
 import utils
 import ann
-from data_pre.preprocesse import load_coakroaches
+from data_pre.preprocesse import load_coakroaches, MyRotationTransform
 
+import json
 
 parser = argparse.ArgumentParser()
 
@@ -53,19 +54,18 @@ parser.add_argument(
 
 parser.add_argument(
     "--model",
-    choices=["vanilla", "fancyCNN"],
+    choices=["vanilla", "fancyCNN", "PenCNN", "resnet"],
     action="store",
     required=True,
 )
 
 args = parser.parse_args()
+img_width, img_height = 64, 64
 
-img_width = 28
-img_height = 28
 img_size = (1, img_height, img_width)
 num_classes = 86
 batch_size = 128
-epochs = 10
+epochs = 40
 valid_ratio = 0.2
 
 if args.use_gpu:
@@ -86,10 +86,12 @@ if not os.path.exists(logdir):
 # Data augmentation
 train_augment_transforms = None
 if args.data_augment:
+    rotation_transform = MyRotationTransform(angles=[-30, -15, 0, 15, 30])
     train_augment_transforms = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(0.5),
-            RandomAffine(degrees=10, translate=(0.1, 0.1)),
+            transforms.RandomVerticalFlip(p=0.5),
+            transforms.GaussianBlur(kernel_size=(5, 9), sigma=(0.1, 5)),
         ]
     )
 
@@ -108,9 +110,8 @@ model = model.to(device)
 
 loss = nn.CrossEntropyLoss()  # This computes softmax internally
 # optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
-optimizer = torch.optim.Adam(
-    model.parameters(), lr=0.01, weight_decay=args.weight_decay
-)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0004, weight_decay=0)
+exp_lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
 
 # Where to save the logs of the metrics
 history_file = open(logdir + "/history", "w", 1)
@@ -120,7 +121,7 @@ history_file.write(
 
 # Generate and dump the summary of the model
 model_summary = utils.torch_summarize(model)
-print("Summary:\n {}".format(model_summary))
+
 
 summary_file = open(logdir + "/summary.txt", "w")
 summary_text = """
@@ -166,7 +167,11 @@ for t in range(epochs):
     train_loss, train_acc = utils.train(model, train_loader, loss, optimizer, device)
 
     val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
-    print(" Validation : Loss : {:.4f}, Acc : {:.4f}".format(val_loss, val_acc))
+    print(
+        "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(
+            val_loss, val_acc, val_f1
+        )
+    )
 
     # test_loss, test_acc = utils.test(model, test_loader, loss, device)
     # print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
@@ -182,6 +187,10 @@ for t in range(epochs):
     tensorboard_writer.add_scalar("metrics/val_f1", val_f1, t)
     # tensorboard_writer.add_scalar("metrics/test_loss", test_loss, t)
     # tensorboard_writer.add_scalar("metrics/test_acc", test_acc, t)
+    sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
+
+    with open(f"result__{t}.json", "w") as fp:
+        json.dump(sample, fp)
 
 
 # Loading the best model found
@@ -199,6 +208,12 @@ val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
 print(
     "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(val_loss, val_acc, val_f1)
 )
+utils.test_csv(model, test_loader, device, dir=logdir)
 
 # test_loss, test_acc = utils.test(model, test_loader, loss, device)
 # print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
+sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
+import json
+
+with open("result_true.json", "w") as fp:
+    json.dump(sample, fp)

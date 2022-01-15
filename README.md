@@ -1,25 +1,20 @@
 # Lancez les commandes sur gpu
 
-1. Prétraiter les données
-    ```sh 
-    python3 models/data_pre/do.py
-    python3 models/data_pre/do_test.py
-    ```
-2. Entrainer un modèle
+1. Entrainer un modèle en normalisant les input et avec de l'augmentation
    ```sh 
-    python3 models/train.py --use_gpu --model fancyCNN
+    python3 models/train.py --use_gpu --model FancyCNN --normalize --num_workers 4 --data_augment
    ```
 
-3. Réutiliser le meilleur modèle entrainer pour une architecture et des paramètres spécifiques
+3. Réutiliser le meilleur modèle entrainer pour une architecture et des paramètres spécifiques, et le sauvegarder (a faire avant le test)
     ```sh 
-    python3 models/best_model.py --use_gpu --model fancyCNN
+    python3 models/best_model.py --use_gpu --model fancyCNN --normalize
 
-    python3 models/test.py --paramfile ./logs/fancyCNN_9/best_model.pt --dir result --model fancyCNN
+     
 
    ```
-4. Generer le csv des resultat a partir d'un modele entrainer
+4. Generer le csv des resultat a partir d'un modele entrainer (normaliser si le modele a etait normalise)
     ```sh  
-    python3 models/test.py --paramfile ./logs/fancyCNN_9/best_model.pt --dir result --model fancyCNN
+    python3 models/test.py --paramfile ./logs/fancyCNN_9/best_model.pt --dir result --model fancyCNN --normalize
 
    ```
 
