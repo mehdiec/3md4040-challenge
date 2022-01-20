@@ -54,13 +54,13 @@ parser.add_argument(
 
 parser.add_argument(
     "--model",
-    choices=["vanilla", "fancyCNN", "PenCNN", "resnet"],
+    choices=["vanilla", "fancyCNN", "PenCNN", "resnet", "densenet"],
     action="store",
     required=True,
 )
 
 args = parser.parse_args()
-img_width, img_height = 64, 64
+img_width, img_height = 224, 224
 
 img_size = (1, img_height, img_width)
 num_classes = 86
