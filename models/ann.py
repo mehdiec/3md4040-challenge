@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.init
 import torchvision
-
+from collections import OrderedDict
 
 # BIEN CHOISIR LES INPUT LAYER POUR LA DERNIERE COUCHE
 def linear(dim_in, dim_out):
@@ -186,6 +186,37 @@ def build_model(model_name, img_size, num_classes):
         resnet.fc = nn.Linear(infeat, num_classes)
         resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         model = resnet
+    elif model_name == "densenet":
+        densenet = torch.hub.load(
+            "pytorch/vision:v0.10.0", "densenet121", pretrained=True
+        )
+
+        infeat = densenet.classifier.in_features
+
+        densenet.classifier = nn.Sequential(nn.Linear(infeat, num_classes))
+        num_init_features = 64
+        densenet.features = nn.Sequential(
+            OrderedDict(
+                [
+                    (
+                        "conv0",
+                        nn.Conv2d(
+                            1,
+                            num_init_features,
+                            kernel_size=7,
+                            stride=2,
+                            padding=3,
+                            bias=False,
+                        ),
+                    ),
+                    ("norm0", nn.BatchNorm2d(num_init_features)),
+                    ("relu0", nn.ReLU(inplace=True)),
+                    ("pool0", nn.MaxPool2d(kernel_size=3, stride=2, padding=1)),
+                ]
+            )
+        )
+
+        model = densenet
 
     else:
         raise NotImplementedError("Unknown model {}".format(model_name))

@@ -29,7 +29,7 @@ class MyRotationTransform:
 rotation_transform = MyRotationTransform(angles=[-30, -15, 0, 15, 30])
 
 
-DIM = 64, 64  # 256, 256
+DIM = 224, 224  # 256, 256
 
 
 class TrainValidDataset(Dataset):
@@ -37,14 +37,20 @@ class TrainValidDataset(Dataset):
         self.data_root = data_root
         self.transform = transform
         self.samples = []
-
+        catch = 0
         for image_paths in os.listdir(data_root):
+            catch += 1
 
             real_path = os.path.join(data_root, image_paths)
             name = int(image_paths.split("/")[-1][:3])
             boom = 1
-            if len(os.listdir(real_path)) < 1999:
-                boom = int(2000 / len(os.listdir(real_path)))
+
+            if len(os.listdir(real_path)) < 99:
+                boom = 10
+            if len(os.listdir(real_path)) < 499:
+                boom = 2
+            if catch == 5:
+                break
             for _ in range(boom):
                 for filename in os.listdir(real_path):
 
@@ -61,11 +67,9 @@ class TrainValidDataset(Dataset):
 
         if self.transform:
             img_file = image.resize(DIM)
-            img_grey = img_file.convert("L")
             img_grey = self.transform(image=img_file)["image"]
         else:
             img_file = image.resize(DIM)
-            img_grey = img_file.convert("L")
 
         return img_grey, classe
 
@@ -90,11 +94,9 @@ class TestDataset(Dataset):
         image = Image.open(image)
         if self.transform:
             img_file = image.resize(DIM)
-            img_grey = img_file.convert("L")
             img_grey = self.transform(image=img_file)["image"]
         else:
             img_file = image.resize(DIM)
-            img_grey = img_file.convert("L")
         return img_grey, classe
 
 
