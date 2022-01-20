@@ -37,16 +37,20 @@ class TrainValidDataset(Dataset):
         self.data_root = data_root
         self.transform = transform
         self.samples = []
-
+        catch = 0
         for image_paths in os.listdir(data_root):
+            catch += 1
 
             real_path = os.path.join(data_root, image_paths)
             name = int(image_paths.split("/")[-1][:3])
             boom = 1
+
             if len(os.listdir(real_path)) < 99:
                 boom = 10
             if len(os.listdir(real_path)) < 499:
                 boom = 2
+            if catch == 5:
+                break
             for _ in range(boom):
                 for filename in os.listdir(real_path):
 
