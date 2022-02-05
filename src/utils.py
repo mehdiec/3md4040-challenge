@@ -131,7 +131,9 @@ def test_csv(model, loader, device, dir):
     # We disable gradient computation which speeds up the computation
     # and reduces the memory usage
     COL = "imgname", "label"
-    with open(dir + "results.csv", "a") as f:
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+    with open(dir + "/results.csv", "a") as f:
         writer = csv.writer(f)
         writer.writerow(COL)
     with torch.no_grad():
