@@ -144,7 +144,7 @@ def load_coakroaches(
     # Load the dataset for the training/validation sets
 
     # Split it into training and validation sets /mounts/Datasets1/ChallengeDeep/train/ /mounts/Datasets1/ChallengeDeep/test/imgs/
-    train_valid_dataset = TrainValidDataset(data_root=dataset_dir + " train/")
+    train_valid_dataset = TrainValidDataset(data_root=dataset_dir + "train/")
     nb_train, nb_valid = int((1.0 - valid_ratio) * len(train_valid_dataset)), int(
         valid_ratio * len(train_valid_dataset)
     )
