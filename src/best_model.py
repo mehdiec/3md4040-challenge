@@ -18,20 +18,13 @@ parser.add_argument(
     "--dataset_dir",
     type=str,
     help="Where to store the downloaded dataset",
-    default=None,
+    default="/mounts/Datasets1/ChallengeDeep/",
 )
 
 parser.add_argument(
     "--num_workers", type=int, default=1, help="The number of CPU threads used"
 )
 
-parser.add_argument("--weight_decay", type=float, default=0, help="Weight decay")
-
-parser.add_argument(
-    "--data_augment",
-    help="Specify if you want to use data augmentation",
-    action="store_true",
-)
 
 parser.add_argument(
     "--normalize",
@@ -39,18 +32,19 @@ parser.add_argument(
     action="store_true",
 )
 
-parser.add_argument(
-    "--logdir",
-    type=str,
-    default="./logs",
-    help="The directory in which to store the logs",
-)
 
 parser.add_argument(
     "--model",
     choices=["vanilla", "fancyCNN", "PenCNN", "resnet", "densenet"],
     action="store",
     required=True,
+)
+
+parser.add_argument(
+    "--log_model",
+    type=str,
+    default="./logs/resnet_0",
+    help="The model to load",
 )
 
 args = parser.parse_args()
@@ -71,13 +65,15 @@ else:
     device = torch.device("cpu")
 
 # Where to store the logs
-logdir = "./logs/PenCNN_9"
-print("Logging to {}".format(logdir))
-if not os.path.exists(args.logdir):
-    os.mkdir(args.logdir)
-if not os.path.exists(logdir):
-    os.mkdir(logdir)
+logdir = args.log_model
 
+
+if not os.path.exists(logdir):
+
+    print("Directory {} does not exist".format(logdir))
+    sys.exit(-1)
+
+print("Logging to {}".format(logdir))
 # FashionMNIST dataset
 train_augment_transforms = None
 

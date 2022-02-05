@@ -1,20 +1,17 @@
 # Lancez les commandes sur gpu
 
-1. Entrainer un modèle en normalisant les input et avec de l'augmentation
+1. Entrainer un mod��le en normalisant les input et avec de l'augmentation
    ```sh 
-    python3 models/train.py --use_gpu --model FancyCNN --normalize --num_workers 4 --data_augment
+    python3 src/train.py --use_gpu --model resnet --normalize --num_workers 8 --data_augment
    ```
 
-3. Réutiliser le meilleur modèle entrainer pour une architecture et des paramètres spécifiques, et le sauvegarder (a faire avant le test)
+3. R��utiliser le meilleur mod��le entrainer si le modele ne s'est pas sauvegarder correctement
     ```sh 
-    python3 models/best_model.py --use_gpu --model fancyCNN --normalize
-
-     
+    python3 src/best_model.py --use_gpu --model resnet --normalize --log_model ./logs/resnet_13 --num_workers 8
 
    ```
 4. Generer le csv des resultat a partir d'un modele entrainer (normaliser si le modele a etait normalise)
     ```sh  
-    python3 models/test.py --paramfile ./logs/fancyCNN_9/best_model.pt --dir result --model fancyCNN --normalize
+    python3 src/test.py --paramfile ./logs/resnet_13/best_model.pt --dir result --model resnet --normalize --num_workers 8
 
    ```
-

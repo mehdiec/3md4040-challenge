@@ -22,7 +22,12 @@ parser.add_argument("--use_gpu", action="store_true", help="Whether to use GPU")
 parser.add_argument(
     "--num_workers", type=int, default=1, help="The number of CPU threads used"
 )
-
+parser.add_argument(
+    "--dataset_dir",
+    type=str,
+    help="Where to store the downloaded dataset",
+    default="/mounts/Datasets1/ChallengeDeep/",
+)
 
 parser.add_argument(
     "--model",
@@ -73,7 +78,8 @@ train_augment_transforms = None
     batch_size,
     args.num_workers,
     args.normalize,
-    train_augment_transforms,
+    dataset_dir=args.dataset_dir,
+    train_augment_transforms=train_augment_transforms,
 )
 
 

@@ -1,32 +1,12 @@
-import numpy as np
-import cv2
 import os.path
 import copy
-import glob
 import time
 
 # from plankton import PlanktonsDataset
-from sklearn.model_selection import StratifiedShuffleSplit
 import torch
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
-import torchvision.transforms.functional as TF
-import random
 from PIL import Image
-
-
-class MyRotationTransform:
-    """Rotate by one of the given angles."""
-
-    def __init__(self, angles=[-30, -15, 0, 15, 30]):
-        self.angles = angles
-
-    def __call__(self, x):
-        angle = random.choice(self.angles)
-        return TF.rotate(x, angle)
-
-
-rotation_transform = MyRotationTransform(angles=[-30, -15, 0, 15, 30])
 
 
 DIM = 224, 224  # 256, 256
@@ -49,7 +29,7 @@ class TrainValidDataset(Dataset):
                 boom = 10
             if len(os.listdir(real_path)) < 499:
                 boom = 2
-            if catch == 5:
+            if catch == 2000000:
                 break
             for _ in range(boom):
                 for filename in os.listdir(real_path):
@@ -69,7 +49,7 @@ class TrainValidDataset(Dataset):
             img_file = image.resize(DIM)
             img_grey = self.transform(image=img_file)["image"]
         else:
-            img_file = image.resize(DIM)
+            img_grey = image.resize(DIM)
 
         return img_grey, classe
 
@@ -96,7 +76,7 @@ class TestDataset(Dataset):
             img_file = image.resize(DIM)
             img_grey = self.transform(image=img_file)["image"]
         else:
-            img_file = image.resize(DIM)
+            img_grey = image.resize(DIM)
         return img_grey, classe
 
 
@@ -155,6 +135,7 @@ def load_coakroaches(
     batch_size,
     num_workers,
     normalize,
+    dataset_dir="/mounts/Datasets1/ChallengeDeep/",
     train_augment_transforms=None,
 ):
 
@@ -163,9 +144,7 @@ def load_coakroaches(
     # Load the dataset for the training/validation sets
 
     # Split it into training and validation sets /mounts/Datasets1/ChallengeDeep/train/ /mounts/Datasets1/ChallengeDeep/test/imgs/
-    train_valid_dataset = TrainValidDataset(
-        data_root="/mounts/Datasets1/ChallengeDeep/train/"
-    )
+    train_valid_dataset = TrainValidDataset(data_root=dataset_dir + "train/")
     nb_train, nb_valid = int((1.0 - valid_ratio) * len(train_valid_dataset)), int(
         valid_ratio * len(train_valid_dataset)
     )
@@ -180,7 +159,7 @@ def load_coakroaches(
     print("Train Val loaded")
 
     test_dataset = TestDataset(
-        "/mounts/Datasets1/ChallengeDeep/test/imgs/",
+        dataset_dir + "test/imgs/",
     )
     print("Test  loaded")
     # Load the test set
