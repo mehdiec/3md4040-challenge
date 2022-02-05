@@ -1,3 +1,4 @@
+
 import argparse
 import os
 import sys
@@ -12,6 +13,7 @@ import ann
 from data_pre.preprocesse import load_coakroaches
 
 import json
+
 
 parser = argparse.ArgumentParser()
 
@@ -57,6 +59,7 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+
 img_width, img_height = 224, 224
 
 img_size = (1, img_height, img_width)
@@ -158,7 +161,7 @@ inputs = inputs.to(device)
 inputs = inputs.float()
 tensorboard_writer.add_graph(model, inputs)
 ########################################### Main Loop ###########################################
-for t in range(epochs):
+for t in range(1):
     print("Epoch {}".format(t))
     train_loss, train_acc = utils.train(model, train_loader, loss, optimizer, device)
 
@@ -195,7 +198,7 @@ model = loaded_dict["model"].to(device)
 model.eval()
 
 val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
-
+torch.save(model, logdir + "/best_model.pt")
 print(
     "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(val_loss, val_acc, val_f1)
 )

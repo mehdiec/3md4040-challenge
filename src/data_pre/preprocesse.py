@@ -25,11 +25,11 @@ class TrainValidDataset(Dataset):
             name = int(image_paths.split("/")[-1][:3])
             boom = 1
 
-            if len(os.listdir(real_path)) < 99:
+            if len(os.listdir(real_path)) < 15:
                 boom = 10
-            if len(os.listdir(real_path)) < 499:
+            if len(os.listdir(real_path)) < 10:
                 boom = 2
-            if catch == 2000000:
+            if catch == 2:
                 break
             for _ in range(boom):
                 for filename in os.listdir(real_path):

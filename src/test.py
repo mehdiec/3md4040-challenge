@@ -47,6 +47,7 @@ parser.add_argument(
 parser.add_argument(
     "--dir",
     type=str,
+    default = "./Results/",
     help="Which directory will the result be dumped",
     required=True,
 )
