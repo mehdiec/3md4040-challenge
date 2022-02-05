@@ -18,7 +18,7 @@ parser.add_argument(
     "--dataset_dir",
     type=str,
     help="Where to store the downloaded dataset",
-    default=None,
+    default="/mounts/Datasets1/ChallengeDeep/",
 )
 
 parser.add_argument(
@@ -66,12 +66,14 @@ else:
 
 # Where to store the logs
 logdir = args.log_model
-print("Logging to {}".format(logdir))
-if not os.path.exists(args.logdir):
-    os.mkdir(args.logdir)
-if not os.path.exists(logdir):
-    os.mkdir(logdir)
 
+
+if not os.path.exists(logdir):
+
+    print("Directory {} does not exist".format(logdir))
+    sys.exit(-1)
+
+print("Logging to {}".format(logdir))
 # FashionMNIST dataset
 train_augment_transforms = None
 
