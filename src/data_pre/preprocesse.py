@@ -29,7 +29,7 @@ class TrainValidDataset(Dataset):
                 boom = 10
             if len(os.listdir(real_path)) < 499:
                 boom = 2
-            if catch == 5:
+            if catch == 2:
                 break
             for _ in range(boom):
                 for filename in os.listdir(real_path):
@@ -49,7 +49,7 @@ class TrainValidDataset(Dataset):
             img_file = image.resize(DIM)
             img_grey = self.transform(image=img_file)["image"]
         else:
-            img_file = image.resize(DIM)
+            img_grey = image.resize(DIM)
 
         return img_grey, classe
 
@@ -76,7 +76,7 @@ class TestDataset(Dataset):
             img_file = image.resize(DIM)
             img_grey = self.transform(image=img_file)["image"]
         else:
-            img_file = image.resize(DIM)
+            img_grey = image.resize(DIM)
         return img_grey, classe
 
 
