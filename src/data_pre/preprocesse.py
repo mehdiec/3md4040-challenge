@@ -29,7 +29,7 @@ class TrainValidDataset(Dataset):
                 boom = 10
             if len(os.listdir(real_path)) < 499:
                 boom = 2
-            if catch == 2:
+            if catch == 2000000:
                 break
             for _ in range(boom):
                 for filename in os.listdir(real_path):
