@@ -4,15 +4,12 @@ import sys
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
-import numpy as np
 
-
-from torchvision.transforms import RandomAffine
 from torch.utils.tensorboard import SummaryWriter
 
 import utils
 import ann
-from data_pre.preprocesse import load_coakroaches, MyRotationTransform
+from data_pre.preprocesse import load_coakroaches
 
 import json
 
@@ -24,7 +21,7 @@ parser.add_argument(
     "--dataset_dir",
     type=str,
     help="Where to store the downloaded dataset",
-    default=None,
+    default="/mounts/Datasets1/ChallengeDeep/",
 )
 
 parser.add_argument(
@@ -86,7 +83,6 @@ if not os.path.exists(logdir):
 # Data augmentation
 train_augment_transforms = None
 if args.data_augment:
-    rotation_transform = MyRotationTransform(angles=[-30, -15, 0, 15, 30])
     train_augment_transforms = transforms.Compose(
         [
             transforms.RandomHorizontalFlip(0.5),
@@ -108,8 +104,8 @@ if args.data_augment:
 model = ann.build_model(args.model, img_size, num_classes)
 model = model.to(device)
 
-loss = nn.CrossEntropyLoss()  # This computes softmax internally
-# optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, nesterov=True)
+loss = nn.CrossEntropyLoss()
+
 optimizer = torch.optim.Adam(model.parameters(), lr=0.0004, weight_decay=0)
 exp_lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=6, gamma=0.1)
 
@@ -161,7 +157,7 @@ inputs, _ = next(iter(train_loader))
 inputs = inputs.to(device)
 inputs = inputs.float()
 tensorboard_writer.add_graph(model, inputs)
-####################################################################################### Main Loop
+########################################### Main Loop ###########################################
 for t in range(epochs):
     print("Epoch {}".format(t))
     train_loss, train_acc = utils.train(model, train_loader, loss, optimizer, device)
@@ -173,9 +169,6 @@ for t in range(epochs):
         )
     )
 
-    # test_loss, test_acc = utils.test(model, test_loader, loss, device)
-    # print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
-
     history_file.write(
         "{}\t{}\t{}\t{}\t{}\n".format(t, train_loss, train_acc, val_loss, val_acc)
     )
@@ -185,11 +178,9 @@ for t in range(epochs):
     tensorboard_writer.add_scalar("metrics/val_loss", val_loss, t)
     tensorboard_writer.add_scalar("metrics/val_acc", val_acc, t)
     tensorboard_writer.add_scalar("metrics/val_f1", val_f1, t)
-    # tensorboard_writer.add_scalar("metrics/test_loss", test_loss, t)
-    # tensorboard_writer.add_scalar("metrics/test_acc", test_acc, t)
     sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
 
-    with open(f"result__{t}.json", "w") as fp:
+    with open(logdir + f"/result__{t}.json", "w") as fp:
         json.dump(sample, fp)
 
 
@@ -210,8 +201,6 @@ print(
 )
 utils.test_csv(model, test_loader, device, dir=logdir)
 
-# test_loss, test_acc = utils.test(model, test_loader, loss, device)
-# print(" Test       : Loss : {:.4f}, Acc : {:.4f}".format(test_loss, test_acc))
 sample = {"name": logdir, "Loss": val_loss, "Acc": val_acc, "macro F1": val_f1}
 import json
 

@@ -1,36 +1,11 @@
+import os
+import sys
+import time
 import csv
-import json
 import numpy as np
 import torch
 from torch.nn.modules.module import _addindent
-from sklearn.metrics import f1_score, accuracy_score, precision_score, recall_score
-
-
-def scores(y_pred, y_true):
-    scores = []
-
-    np_y_true = np.array(y_true)
-    np_y_pred = np.array(y_pred)
-    for cls in np.unique(np_y_true):
-        biclass_true = (np_y_true == cls).astype(int)
-        biclass_pred = (np_y_pred == cls).astype(int)
-        tp = (biclass_true * biclass_pred).sum()
-        fp = ((1 - biclass_true) * biclass_pred).sum()
-        fn = (biclass_true * (1 - biclass_pred)).sum()
-        tn = ((1 - biclass_true) * (1 - biclass_pred)).sum()
-        dict_class = {
-            "Class": int(cls),
-            "TP": int(tp),
-            "FN": int(fn),
-            "FP": int(fp),
-            "TN": int(tn),
-            "precision": int(precision_score(biclass_true, biclass_pred)),
-            "recall": int(recall_score(biclass_true, biclass_pred)),
-            "local_F1": int(f1_score(biclass_true, biclass_pred)),
-        }
-        scores.append(dict_class)
-
-    return scores
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 
 def train(model, loader, f_loss, optimizer, device):
@@ -43,7 +18,7 @@ def train(model, loader, f_loss, optimizer, device):
     loader    -- A torch.utils.data.DataLoader
     f_loss -- The loss function, i.e. a loss Module
     optimizer -- A torch.optim.Optimzer object
-    use_gpu  -- Boolean, whether to use GPU
+    device  -- Boolean, whether to use GPU
     Returns :
     """
 
@@ -98,7 +73,7 @@ def test(model, loader, f_loss, device):
         f_loss    -- The loss function, i.e. a loss Module
         device    -- a torch.device object
     Returns :
-        A tuple with the mean loss and mean accuracy
+        A tuple with the mean loss and mean accuracy anf f1 score
     """
     # We disable gradient computation which speeds up the computation
     # and reduces the memory usage
@@ -131,7 +106,6 @@ def test(model, loader, f_loss, device):
             y_pred = predicted_targets.cpu().data.numpy()
 
             f11 += f1_score(y_true, y_pred, average="macro")
-            data = scores(y_true, y_pred)
             progress_bar(
                 i,
                 len(loader),
@@ -139,10 +113,6 @@ def test(model, loader, f_loss, device):
                     tot_loss / N, correct / N, f1_score(y_true, y_pred, average="macro")
                 ),
             )
-
-            with open("app.json", "w") as f:
-
-                json.dump(data, f)
 
         return tot_loss / N, correct / N, f11 / cnt
 
@@ -155,13 +125,15 @@ def test_csv(model, loader, device, dir):
         loader    -- A torch.utils.data.DataLoader
         f_loss    -- The loss function, i.e. a loss Module
         device    -- a torch.device object
+        dir       -- where to save the csv
     Returns :
-        A tuple with the mean loss and mean accuracy
     """
     # We disable gradient computation which speeds up the computation
     # and reduces the memory usage
     COL = "imgname", "label"
-    with open(dir + "results.csv", "a") as f:
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+    with open(dir + "/results.csv", "a") as f:
         writer = csv.writer(f)
         writer.writerow(COL)
     with torch.no_grad():
@@ -190,20 +162,15 @@ def test_csv(model, loader, device, dir):
                 msg="...",
             )
 
-            with open(dir + "results.csv", "a") as f:
+            with open(dir + "/results.csv", "a") as f:
                 writer = csv.writer(f)
                 writer.writerows(data)
 
 
 # from https://github.com/kuangliu/pytorch-cifar/blob/master/utils.py
 
-import os
-import sys
-import time
-import math
 
-_, term_width = os.popen("stty size", "r").read().split()
-term_width = int(term_width)
+term_width = int(2)
 
 TOTAL_BAR_LENGTH = 65.0
 last_time = time.time()
@@ -335,33 +302,3 @@ def torch_summarize(model, show_weights=True, show_parameters=True):
     tmpstr = tmpstr + ")"
     tmpstr += "\n {} learnable parameters".format(total_params)
     return tmpstr
-
-
-# SquarePadding : https://discuss.pytorch.org/t/how-to-resize-and-pad-in-a-torchvision-transforms-compose/71850/10
-
-
-class SquarePad:
-    def __call__(self, image):
-        max_wh = 300  # Max longueur largeur des images du dataset ������������������ determiner
-        p_left, p_top = [(max_wh - s) // 2 for s in image.size]
-        p_right, p_bottom = [
-            max_wh - (s + pad) for s, pad in zip(image.size, [p_left, p_top])
-        ]
-        padding = (p_left, p_top, p_right, p_bottom)
-        return F.pad(
-            image, padding, 255, "constant"
-        )  # valeur 0 pour la couleur noir, 255 pour blanche
-
-
-"""
-Use example :
-
-target_image_size = (224, 224)  # as an example
-# now use it as the replacement of transforms.Pad class
-transform=transforms.Compose([
-    SquarePad(),
-    transforms.Resize(target_image_size),
-    transforms.ToTensor(),
-    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-])
-"""

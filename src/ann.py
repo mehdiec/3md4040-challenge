@@ -71,11 +71,6 @@ class VanillaCNN(nn.Module):
             *conv_relu_maxp(16, 32, 5),
             *conv_relu_maxp(32, 64, 5)
         )
-        # You must compute the number of features manualy to instantiate the
-        # next FC layer
-        # self.num_features = 64*3*3
-
-        # Or you create a dummy tensor for probing the size of the feature maps
         probe_tensor = torch.zeros((1, 1, 28, 28))
         out_features = self.features(probe_tensor).view(-1)
 
@@ -110,13 +105,6 @@ class FancyCNN(nn.Module):
         )
 
         self.lin1 = nn.Linear(32 * 32, num_classes)
-        # self.classifier = nn.Sequential(
-        #        nn.Dropout(0.5),
-        #        nn.Linear(4*base_n, num_classes)
-        # )
-
-    # def penalty(self):
-    #    return 1e-4 * self.lin1.weight.norm(2)
 
     def forward(self, x):
 
@@ -124,7 +112,6 @@ class FancyCNN(nn.Module):
         x = x.view(x.size()[0], -1)
 
         y = self.lin1(nn.functional.dropout(x, 0.5, self.training, inplace=True))
-        # y = self.classifier(x)
         return y
 
 
@@ -148,10 +135,6 @@ class PenCNN(nn.Module):
         )
 
         self.lin1 = nn.Linear(32 * 32, num_classes)  # 144*144
-        # self.classifier = nn.Sequential(
-        #        nn.Dropout(0.5),
-        #        nn.Linear(4*base_n, num_classes)
-        # )
 
     def penalty(self):
         return 1e-4 * self.lin1.weight.norm(2)
@@ -162,14 +145,7 @@ class PenCNN(nn.Module):
 
         x = x.view(x.size()[0], -1)
         y = self.lin1(nn.functional.dropout(x, 0.5, self.training, inplace=True))
-        # y = self.classifier(x)
         return y
-
-
-# Redefining the final fully connected layer
-
-
-# Adding a convolutional layer to match the channels to the resnet model
 
 
 def build_model(model_name, img_size, num_classes):
@@ -186,6 +162,7 @@ def build_model(model_name, img_size, num_classes):
         resnet.fc = nn.Linear(infeat, num_classes)
         resnet.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False)
         model = resnet
+    # does not work sad
     elif model_name == "densenet":
         densenet = torch.hub.load(
             "pytorch/vision:v0.10.0", "densenet121", pretrained=True
