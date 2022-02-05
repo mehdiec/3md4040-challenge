@@ -65,7 +65,7 @@ img_width, img_height = 224, 224
 img_size = (1, img_height, img_width)
 num_classes = 86
 batch_size = 128
-epochs = 40
+epochs = 1
 valid_ratio = 0.2
 
 if args.use_gpu:
@@ -161,7 +161,7 @@ inputs = inputs.to(device)
 inputs = inputs.float()
 tensorboard_writer.add_graph(model, inputs)
 ########################################### Main Loop ###########################################
-for t in range(1):
+for t in range(epochs):
     print("Epoch {}".format(t))
     train_loss, train_acc = utils.train(model, train_loader, loss, optimizer, device)
 
@@ -198,7 +198,8 @@ model = loaded_dict["model"].to(device)
 model.eval()
 
 val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
-torch.save(model, logdir + "/best_model.pt")
+torch.save(model,logdir + "/best_model.pt")
+#torch.save(model.state_dict(), logdir + "/best_model.pt")
 print(
     "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(val_loss, val_acc, val_f1)
 )
