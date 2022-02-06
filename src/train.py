@@ -64,8 +64,8 @@ img_width, img_height = 224, 224
 
 img_size = (1, img_height, img_width)
 num_classes = 86
-batch_size = 128
-epochs = 1
+batch_size = 32
+epochs = 15
 valid_ratio = 0.2
 
 if args.use_gpu:
