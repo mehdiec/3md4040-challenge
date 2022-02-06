@@ -14,7 +14,7 @@ Lancer le train avec main.py
 Lancer le test avec main.py
 
    ```sh 
-    python3 src/main.py test PATH_TO_CHECKPOINT PATH_TO_TEST_SET
+    python3 src/main.py test resnet34_2.2/best_model.pt PATH_TO_TEST_SET
    ```
 
 Vous trouverez le fichier csv (résultat du test) dans le dossier Results
@@ -36,5 +36,5 @@ Entrainer un modèle avec normalisation et augmentation des données
 Generer le csv des resultat a partir d'un modele déjà entraîné (normaliser si le modele était normalisé)
 
    ```sh  
-    python3 src/test.py --paramfile ./logs/resnet34_2.2/best_model.pt --dir Results --model resnet --normalize --num_workers 8
+    python3 src/test.py --paramfile resnet34_2.2/best_model.pt --dir Results --model resnet --normalize --num_workers 8
    ```
