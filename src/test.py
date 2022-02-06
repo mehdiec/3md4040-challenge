@@ -47,8 +47,9 @@ parser.add_argument(
 parser.add_argument(
     "--dir",
     type=str,
+    default = "./Results/",
     help="Which directory will the result be dumped",
-    required=True,
+    required=False,
 )
 parser.add_argument(
     "--normalize",
@@ -90,6 +91,8 @@ best_model_path = args.paramfile
 # model.load_state_dict(torch.load(best_model_path))
 
 model = torch.load(best_model_path)
+#model.load_state_dict(torch.load(best_model_path))
+
 if not issubclass(type(model), torch.nn.Module):
     print(
         """Your param file {} does not seem to be the right one.

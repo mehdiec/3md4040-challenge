@@ -1,3 +1,4 @@
+
 import argparse
 import os
 import sys
@@ -12,6 +13,7 @@ import ann
 from data_pre.preprocesse import load_coakroaches
 
 import json
+
 
 parser = argparse.ArgumentParser()
 
@@ -57,12 +59,13 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
+
 img_width, img_height = 224, 224
 
 img_size = (1, img_height, img_width)
 num_classes = 86
-batch_size = 128
-epochs = 40
+batch_size = 32
+epochs = 15
 valid_ratio = 0.2
 
 if args.use_gpu:
@@ -195,7 +198,8 @@ model = loaded_dict["model"].to(device)
 model.eval()
 
 val_loss, val_acc, val_f1 = utils.test(model, valid_loader, loss, device)
-
+torch.save(model,logdir + "/best_model.pt")
+#torch.save(model.state_dict(), logdir + "/best_model.pt")
 print(
     "Loss : {:.4f}, Acc : {:.4f}, macro F1 :  {:.4f}".format(val_loss, val_acc, val_f1)
 )
