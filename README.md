@@ -6,7 +6,6 @@ Clonage du repo git
 
 Entrainer un modèle en normalisant les input et avec de l'augmentation
    ```sh 
-   
     python3 src/train.py --use_gpu --model resnet --normalize --num_workers 8 --data_augment
    ```
 
