@@ -11,9 +11,9 @@ Lancer le train avec main.py
    ```sh 
    python3 src/main.py train PATH_TO_TRAINING_SET
    
-   Un dossier logs sera alors crée dans le répertoire. Celui-ci contiendra le best_model.pt ainsi que qu'un récapitulatif du train et score.
-   ```
 
+   ```
+   Un dossier logs sera alors crée dans le répertoire. Celui-ci contiendra le best_model.pt ainsi que qu'un récapitulatif du train et score.
 
 Lancer le test avec main.py (avec notre meilleur modèle)
 
