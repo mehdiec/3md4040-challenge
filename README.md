@@ -40,7 +40,7 @@ Generer le csv des resultat a partir d'un modele déjà entraîné (normaliser s
    ```sh  
    python3 src/test.py --paramfile resnet34_2.2/best_model.pt --dir Results --model resnet --normalize --num_workers 8
    ```
-## Authors
+# Authors
 
 * **Mathieu Nalpon**
 * **Mehdi Ech-Chouini**
