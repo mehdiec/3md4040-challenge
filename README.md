@@ -11,7 +11,7 @@ Lancer le train avec main.py
    ```sh 
    python3 src/main.py train PATH_TO_TRAINING_SET
    ```
-Lancer le test avec main.py
+Lancer le test avec main.py (avec notre meilleur modèle)
 
    ```sh 
    python3 src/main.py test resnet34_2.2/best_model.pt PATH_TO_TEST_SET
