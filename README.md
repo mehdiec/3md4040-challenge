@@ -1,7 +1,22 @@
 Clonage du repo git
+
    ```sh 
     git clone https://gitlab-student.centralesupelec.fr/hamza.benslimane/3md4040-challenge.git
+    cd 3md4040-challenge
    ```
+Lancer le train avec main.py
+
+   ```sh 
+    python3 src/main.py train PATH_TO_TRAINING_SET
+   ```
+Lancer le test avec main.py
+
+   ```sh 
+    python3 src/main.py test PATH_TO_CHECKPOINT PATH_TO_TEST_SET
+   ```
+
+Vous trouverez le fichier csv (résultat du test) dans le dossier Results
+
 # Lancez les commandes sur gpu
 
 Entrainer un modèle en normalisant les input et avec de l'augmentation
