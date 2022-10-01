@@ -47,5 +47,4 @@ Generer le csv des resultat a partir d'un modele déjà entraîné (normaliser s
 * **Hamza Benslimane**
 * **Anas El Belbali**
 
-# Lien vidéo de la présentation
-* [Video](https://youtu.be/TxIvZuXQ3m0)
+
